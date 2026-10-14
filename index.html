@@ -14,12 +14,13 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #090d16;
+            background-color: #38bdf8;
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
             touch-action: none;
+            overscroll-behavior: none;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -40,6 +41,7 @@
             display: block;
             width: 100%;
             height: 100%;
+            touch-action: none;
         }
 
         #ui-layer {
@@ -47,6 +49,7 @@
             inset: 0;
             z-index: 10;
             pointer-events: none;
+            touch-action: none;
         }
 
         .pointer-events-auto {
@@ -54,11 +57,11 @@
         }
 
         .hud-glass {
-            background: rgba(10, 15, 28, 0.68);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+            background: rgba(15, 23, 42, 0.62);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
         }
 
         #crosshair {
@@ -68,7 +71,7 @@
             width: 12px;
             height: 12px;
             transform: translate(-50%, -50%);
-            border: 1.5px solid rgba(255, 255, 255, 0.45);
+            border: 1.5px solid rgba(255, 255, 255, 0.55);
             border-radius: 50%;
             pointer-events: none;
             z-index: 12;
@@ -92,12 +95,12 @@
             z-index: 8;
             opacity: 0;
             transition: opacity 0.15s ease;
-            box-shadow: inset 0 0 90px rgba(239, 68, 68, 0.75), inset 0 0 160px rgba(37, 99, 235, 0.55);
+            box-shadow: inset 0 0 70px rgba(239, 68, 68, 0.65), inset 0 0 120px rgba(37, 99, 235, 0.45);
         }
 
         @keyframes sirenPulse {
-            0%, 100% { box-shadow: inset 0 0 95px rgba(239, 68, 68, 0.85), inset 0 0 40px rgba(239, 68, 68, 0.5); }
-            50% { box-shadow: inset 0 0 95px rgba(37, 99, 235, 0.85), inset 0 0 40px rgba(37, 99, 235, 0.5); }
+            0%, 100% { box-shadow: inset 0 0 75px rgba(239, 68, 68, 0.7), inset 0 0 30px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: inset 0 0 75px rgba(37, 99, 235, 0.7), inset 0 0 30px rgba(37, 99, 235, 0.4); }
         }
 
         .siren-active {
@@ -113,7 +116,7 @@
             touch-action: none;
         }
         #joystick-knob {
-            transition: transform 0.04s linear;
+            transition: transform 0.02s linear;
         }
     </style>
 </head>
@@ -132,18 +135,18 @@
         <!-- 1. Top-Left: Compact Match Pill & Settings Button -->
         <div class="flex items-center gap-1.5 sm:gap-2">
             <div class="hud-glass text-white px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-2xl flex items-center gap-2 sm:gap-3">
-                <div class="flex flex-col pr-2 border-r border-white/10">
-                    <span id="round-badge" class="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-yellow-400">ROUND 1</span>
+                <div class="flex flex-col pr-2 border-r border-white/15">
+                    <span id="round-badge" class="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-yellow-300">ROUND 1</span>
                     <span id="timer-display" class="text-xs sm:text-sm font-bold font-mono-tech text-white leading-tight">05:00</span>
                 </div>
                 <div class="flex items-center gap-1.5 sm:gap-2.5 text-xs font-bold font-mono-tech">
-                    <span class="text-blue-400">🚓 <span id="score-police" class="text-white">0</span></span>
-                    <span class="text-white/20">:</span>
-                    <span class="text-rose-400">🏃🏾‍♂️ <span id="score-thief" class="text-white">0</span></span>
+                    <span class="text-blue-300">🚓 <span id="score-police" class="text-white">0</span></span>
+                    <span class="text-white/25">:</span>
+                    <span class="text-rose-300">🏃🏾‍♂️ <span id="score-thief" class="text-white">0</span></span>
                 </div>
-                <div class="h-5 w-[1px] bg-white/10 hidden sm:block"></div>
+                <div class="h-5 w-[1px] bg-white/15 hidden sm:block"></div>
                 <div class="hidden sm:flex items-center gap-2">
-                    <span id="hud-wallet-balance" class="text-xs font-extrabold font-mono-tech text-emerald-400">₦15,000</span>
+                    <span id="hud-wallet-balance" class="text-xs font-extrabold font-mono-tech text-emerald-300">₦15,000</span>
                     <span id="hud-combo-pill" class="bg-orange-500/20 border border-orange-400/40 text-orange-300 text-[10px] font-bold font-mono-tech px-1.5 py-0.5 rounded-md">1.0x</span>
                 </div>
                 <span id="hud-net-badge" class="hidden bg-emerald-500/20 text-emerald-300 text-[10px] font-mono-tech font-bold px-2 py-0.5 rounded-md border border-emerald-400/40">
@@ -160,22 +163,22 @@
         <div class="flex flex-col items-center gap-1.5 flex-1 max-w-md mx-auto">
             <div class="hud-glass text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl text-center w-full">
                 <div class="flex items-center justify-center gap-1.5 sm:gap-2 text-xs">
-                    <span id="objective-title" class="font-extrabold uppercase tracking-wider text-yellow-400 text-[9px] sm:text-[10px]">OBJECTIVE</span>
+                    <span id="objective-title" class="font-extrabold uppercase tracking-wider text-yellow-300 text-[9px] sm:text-[10px]">OBJECTIVE</span>
                     <span class="text-white/25">•</span>
-                    <span id="objective-desc" class="font-medium text-slate-200 text-[10px] sm:text-[11px] truncate">Follow the 3D Arrow!</span>
+                    <span id="objective-desc" class="font-medium text-slate-100 text-[10px] sm:text-[11px] truncate">Follow the 3D Arrow!</span>
                 </div>
-                <div class="flex items-center justify-center gap-2 sm:gap-3 mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] font-mono-tech text-slate-300">
+                <div class="flex items-center justify-center gap-2 sm:gap-3 mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] font-mono-tech text-slate-200">
                     <span id="target-distance" class="text-cyan-300 font-semibold">🎯 45m</span>
-                    <span class="text-white/20">|</span>
+                    <span class="text-white/25">|</span>
                     <span id="japa-distance" class="text-emerald-300 font-semibold">🚐 32m</span>
-                    <span class="text-white/20">|</span>
+                    <span class="text-white/25">|</span>
                     <span id="targets-progress" class="text-amber-300 font-bold">🔑 0/3 Keys</span>
                 </div>
 
                 <!-- Danfo Boarding Progress (Only visible for Thief) -->
-                <div id="danfo-lock-banner" class="hidden mt-1.5 pt-1.5 border-t border-white/10">
+                <div id="danfo-lock-banner" class="hidden mt-1.5 pt-1.5 border-t border-white/15">
                     <div class="flex items-center justify-between text-[9px] sm:text-[10px] font-mono-tech font-bold mb-1">
-                        <span id="danfo-lock-status" class="text-rose-400">🔒 Grab 3 Keys to Unlock Danfo</span>
+                        <span id="danfo-lock-status" class="text-rose-300">🔒 Grab 3 Keys to Unlock Danfo</span>
                         <span id="danfo-board-pct" class="text-yellow-300">0/3</span>
                     </div>
                     <div class="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
@@ -188,14 +191,14 @@
             <div id="message-center" class="transition-all duration-200 opacity-0 -translate-y-2 scale-95 pointer-events-none w-full max-w-xs">
                 <div class="hud-glass px-3.5 py-2 rounded-xl border-l-4 border-l-yellow-400 text-center">
                     <div id="message-text" class="text-xs font-bold tracking-wide text-yellow-300">I DON CATCH YOU!</div>
-                    <div id="message-sub" class="text-[10px] font-medium text-slate-300 mt-0.5">+1 Point!</div>
+                    <div id="message-sub" class="text-[10px] font-medium text-slate-200 mt-0.5">+1 Point!</div>
                 </div>
             </div>
         </div>
 
         <!-- 3. Top-Right: Clean Circular Radar & Max 2 Event Toasts -->
         <div class="flex flex-col items-end gap-1.5">
-            <div class="hud-glass p-1 rounded-full border border-white/15">
+            <div class="hud-glass p-1 rounded-full border border-white/20">
                 <canvas id="minimap" width="76" height="76" class="rounded-full block sm:w-[84px] sm:h-[84px]"></canvas>
             </div>
             <div id="killfeed-container" class="flex flex-col items-end gap-1 w-40 sm:w-44 pointer-events-none"></div>
@@ -208,30 +211,35 @@
         <!-- MOBILE & TABLET DUAL-THUMB OVERLAY (Auto-shown on touch screens or toggled in menu) -->
         <div id="mobile-controls-wrapper" class="hidden w-full flex justify-between items-end px-1 sm:px-4 pb-1 pointer-events-none">
             <!-- Left Thumb: Virtual Analog Joystick -->
-            <div id="joystick-zone" class="pointer-events-auto relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-slate-900/60 border-2 border-white/20 backdrop-blur-md flex items-center justify-center shadow-lg">
-                <div class="absolute inset-2 rounded-full border border-dashed border-emerald-400/30 pointer-events-none"></div>
-                <span class="absolute top-1.5 text-[8px] font-bold uppercase tracking-widest text-white/40 pointer-events-none">RUN / SPRINT</span>
-                <div id="joystick-knob" class="w-11 h-11 rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 shadow-md border-2 border-white/80 pointer-events-none"></div>
+            <div id="joystick-zone" class="pointer-events-auto relative w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-slate-900/55 border-2 border-white/30 backdrop-blur-md flex items-center justify-center shadow-lg">
+                <div class="absolute inset-2.5 rounded-full border border-dashed border-emerald-400/40 pointer-events-none"></div>
+                <span class="absolute top-2 text-[8px] font-extrabold uppercase tracking-widest text-white/60 pointer-events-none">STEER / SPRINT</span>
+                <div id="joystick-knob" class="w-12 h-12 rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 shadow-lg border-2 border-white pointer-events-none"></div>
             </div>
 
-            <!-- Right Thumb: Ergonomic Action Pad -->
-            <div class="pointer-events-auto grid grid-cols-2 gap-2">
-                <button id="btn-touch-jump" class="w-16 h-12 sm:w-20 sm:h-14 rounded-2xl bg-yellow-400/90 active:bg-yellow-300 active:scale-95 text-slate-950 font-extrabold text-xs shadow-lg border border-white/40 flex flex-col items-center justify-center">
-                    <span>⬆️ JUMP</span>
-                    <span class="text-[8px] font-semibold opacity-75">Vault</span>
+            <!-- Right Thumb: Ergonomic Action Pad + Instant Camera Recenter -->
+            <div class="pointer-events-auto flex flex-col items-end gap-1.5">
+                <button id="btn-touch-cam-reset" class="px-3 py-1.5 rounded-xl bg-slate-900/80 active:bg-slate-800 text-yellow-300 font-bold text-[10px] border border-yellow-400/40 shadow flex items-center gap-1">
+                    <span>🎯</span> <span>Center Cam</span>
                 </button>
-                <button id="btn-touch-sprint" class="w-16 h-12 sm:w-20 sm:h-14 rounded-2xl bg-emerald-500/90 active:bg-emerald-400 active:scale-95 text-slate-950 font-extrabold text-xs shadow-lg border border-white/40 flex flex-col items-center justify-center">
-                    <span>⚡ DASH</span>
-                    <span id="touch-dash-cd" class="text-[8px] font-mono-tech font-bold">READY</span>
-                </button>
-                <button id="btn-touch-throw" class="w-16 h-12 sm:w-20 sm:h-14 rounded-2xl bg-cyan-500/90 active:bg-cyan-400 active:scale-95 text-slate-950 font-extrabold text-xs shadow-lg border border-white/40 flex flex-col items-center justify-center">
-                    <span>💧 WATER</span>
-                    <span id="touch-water-cd" class="text-[8px] font-mono-tech font-bold">READY</span>
-                </button>
-                <button id="btn-touch-smoke" class="w-16 h-12 sm:w-20 sm:h-14 rounded-2xl bg-purple-500/90 active:bg-purple-400 active:scale-95 text-white font-extrabold text-xs shadow-lg border border-white/40 flex flex-col items-center justify-center">
-                    <span>💨 SMOKE</span>
-                    <span id="touch-smoke-cd" class="text-[8px] font-mono-tech font-bold">READY</span>
-                </button>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btn-touch-jump" class="w-16 h-12 sm:w-20 sm:h-14 rounded-2xl bg-yellow-400/95 active:bg-yellow-300 active:scale-95 text-slate-950 font-extrabold text-xs shadow-lg border border-white/50 flex flex-col items-center justify-center">
+                        <span>⬆️ JUMP</span>
+                        <span class="text-[8px] font-semibold opacity-75">Vault</span>
+                    </button>
+                    <button id="btn-touch-sprint" class="w-16 h-12 sm:w-20 sm:h-14 rounded-2xl bg-emerald-500/95 active:bg-emerald-400 active:scale-95 text-slate-950 font-extrabold text-xs shadow-lg border border-white/50 flex flex-col items-center justify-center">
+                        <span>⚡ DASH</span>
+                        <span id="touch-dash-cd" class="text-[8px] font-mono-tech font-bold">READY</span>
+                    </button>
+                    <button id="btn-touch-throw" class="w-16 h-12 sm:w-20 sm:h-14 rounded-2xl bg-cyan-400/95 active:bg-cyan-300 active:scale-95 text-slate-950 font-extrabold text-xs shadow-lg border border-white/50 flex flex-col items-center justify-center">
+                        <span>💧 WATER</span>
+                        <span id="touch-water-cd" class="text-[8px] font-mono-tech font-bold">READY</span>
+                    </button>
+                    <button id="btn-touch-smoke" class="w-16 h-12 sm:w-20 sm:h-14 rounded-2xl bg-purple-500/95 active:bg-purple-400 active:scale-95 text-white font-extrabold text-xs shadow-lg border border-white/50 flex flex-col items-center justify-center">
+                        <span>💨 SMOKE</span>
+                        <span id="touch-smoke-cd" class="text-[8px] font-mono-tech font-bold">READY</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -241,11 +249,11 @@
                 <!-- Stamina Bar -->
                 <div class="flex-1">
                     <div class="flex justify-between text-[10px] font-bold mb-1">
-                        <span class="text-emerald-400">⚡ STAMINA</span>
-                        <span id="stamina-label" class="text-slate-300 font-mono-tech">100%</span>
+                        <span class="text-emerald-300">⚡ STAMINA</span>
+                        <span id="stamina-label" class="text-slate-200 font-mono-tech">100%</span>
                     </div>
                     <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                        <div id="stamina-bar" class="h-full bg-gradient-to-r from-emerald-500 to-yellow-400 transition-all duration-75" style="width: 100%"></div>
+                        <div id="stamina-bar" class="h-full bg-gradient-to-r from-emerald-400 to-yellow-300 transition-all duration-75" style="width: 100%"></div>
                     </div>
                 </div>
 
@@ -268,15 +276,15 @@
 
             <!-- Compact Quick-Spend Row -->
             <div class="flex items-center justify-between border-t border-white/10 pt-1 text-[10px] pointer-events-auto">
-                <span class="text-slate-400 hidden sm:inline">Street Boosts:</span>
+                <span class="text-slate-300 hidden sm:inline">Street Boosts:</span>
                 <div class="flex items-center gap-1.5 w-full sm:w-auto justify-center">
-                    <button id="btn-buy-zobo" class="hover:bg-white/10 active:scale-95 bg-white/5 px-2 py-0.5 rounded-md text-emerald-300 font-semibold transition">
+                    <button id="btn-buy-zobo" class="hover:bg-white/15 active:scale-95 bg-white/10 px-2 py-0.5 rounded-md text-emerald-300 font-semibold transition">
                         🥤 Zobo <span class="text-yellow-300 font-mono-tech">₦300</span>
                     </button>
-                    <button id="btn-buy-decoy" class="hover:bg-white/10 active:scale-95 bg-white/5 px-2 py-0.5 rounded-md text-amber-300 font-semibold transition">
+                    <button id="btn-buy-decoy" class="hover:bg-white/15 active:scale-95 bg-white/10 px-2 py-0.5 rounded-md text-amber-300 font-semibold transition">
                         💨 Decoy <span class="text-yellow-300 font-mono-tech">₦800</span>
                     </button>
-                    <button id="btn-toss-gala" class="hover:bg-white/10 active:scale-95 bg-white/5 px-2 py-0.5 rounded-md text-orange-300 font-semibold transition">
+                    <button id="btn-toss-gala" class="hover:bg-white/15 active:scale-95 bg-white/10 px-2 py-0.5 rounded-md text-orange-300 font-semibold transition">
                         🌭 Gala <span class="text-yellow-300 font-mono-tech">₦150</span>
                     </button>
                 </div>
@@ -286,7 +294,7 @@
 </div>
 
 <!-- CLEAN, TABBED START MENU -->
-<div id="start-menu" class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 overflow-y-auto">
+<div id="start-menu" class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
     <div class="bg-slate-900/95 border border-white/15 rounded-3xl p-5 sm:p-7 max-w-lg w-full text-center shadow-2xl my-auto">
 
         <!-- Top Status Pill: Wallet & Rank -->
@@ -431,15 +439,21 @@
 <div id="pause-menu" class="hidden fixed inset-0 z-30 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
     <div class="bg-slate-900 border border-white/15 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
         <h2 class="text-xl font-extrabold text-yellow-400 mb-1">⚙️ GAME PAUSED</h2>
-        <p class="text-xs text-slate-400 mb-4">Adjust settings or switch teams</p>
+        <p class="text-xs text-slate-400 mb-4">Adjust camera speed, brightness, or switch teams</p>
 
         <!-- Tucked-away Settings Box -->
         <div class="bg-slate-950/90 border border-white/10 rounded-2xl p-3.5 mb-4 space-y-2.5 text-left text-xs">
             <div class="flex items-center justify-between">
-                <span class="text-slate-300 font-medium">🖱️ Look Speed</span>
-                <span id="sens-value" class="text-yellow-300 font-mono-tech font-bold">40%</span>
+                <span class="text-slate-300 font-medium">🔄 Look Sensitivity</span>
+                <span id="sens-value" class="text-yellow-300 font-mono-tech font-bold">50%</span>
             </div>
-            <input id="sens-slider" type="range" min="10" max="100" value="40" class="w-full h-1.5 cursor-pointer">
+            <input id="sens-slider" type="range" min="15" max="120" value="50" class="w-full h-1.5 cursor-pointer">
+
+            <div class="flex items-center justify-between pt-1">
+                <span class="text-slate-300 font-medium">☀️ Screen Brightness</span>
+                <span id="bright-value" class="text-amber-300 font-mono-tech font-bold">140%</span>
+            </div>
+            <input id="bright-slider" type="range" min="90" max="200" value="140" class="w-full h-1.5 cursor-pointer">
 
             <div class="grid grid-cols-2 gap-1.5 pt-1">
                 <button id="btn-audio" class="bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-200 text-[10px] font-semibold py-1.5 px-2 rounded-lg transition text-center">
@@ -449,7 +463,7 @@
                     ☀️ Sunny
                 </button>
                 <button id="btn-autocam" class="bg-slate-900 hover:bg-slate-800 border border-white/10 text-emerald-300 text-[10px] font-semibold py-1.5 px-2 rounded-lg transition text-center truncate">
-                    🎥 Cam: ON
+                    🎥 Follow Cam: ON
                 </button>
                 <button id="btn-toggle-touch" class="bg-slate-900 hover:bg-slate-800 border border-white/10 text-amber-300 text-[10px] font-semibold py-1.5 px-2 rounded-lg transition text-center truncate">
                     📱 Touch UI: AUTO
@@ -602,7 +616,7 @@
 
         <div class="bg-slate-950/90 border border-white/10 rounded-xl p-3 mb-4 grid grid-cols-2 gap-2 text-[11px]">
             <div><strong class="text-white">Desktop:</strong> WASD + Mouse Look</div>
-            <div><strong class="text-amber-300">Mobile/Tablet:</strong> Left Thumbstick + Right Drag</div>
+            <div><strong class="text-amber-300">Mobile/Tablet:</strong> Left Stick + Right Drag / 🎯 Cam</div>
             <div><strong class="text-emerald-300">Shift + Space:</strong> Sprint & Vault</div>
             <div><strong class="text-yellow-300">L-Click / [E]:</strong> Dash / Break Slow</div>
             <div><strong class="text-cyan-300">Press [F]:</strong> Throw Pure Water</div>
@@ -700,7 +714,8 @@
         totalTargetsNeeded: 3,
         autoCam: true,
         showTouchControls: IS_TOUCH_DEVICE,
-        mouseSensitivity: 0.0010,
+        mouseSensitivity: 0.0012,
+        exposureLevel: 1.40,
         walletBalance: 15000,
         selectedStake: 1000,
         selectedPayout: 2800,
@@ -1117,12 +1132,15 @@
         syncWalletWithLagosLifeSim(amount, reason);
     }
 
+    // =========================================================================
+    // BRIGHT, SUNNY LAGOS 3D SCENE & TONE-MAPPED RENDERER
+    // =========================================================================
     const container = document.getElementById('game-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x7dd3fc);
-    scene.fog = new THREE.FogExp2(0xbae6fd, 0.0042);
+    scene.background = new THREE.Color(0x87ceeb);
+    scene.fog = new THREE.FogExp2(0xdbeafe, 0.0028);
 
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
+    const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 500);
 
     let renderer;
     let isWebGLAvailable = false;
@@ -1132,6 +1150,8 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, IS_TOUCH_DEVICE ? 1.5 : 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = STATE.exposureLevel;
         container.appendChild(renderer.domElement);
         isWebGLAvailable = true;
     } catch (e) {
@@ -1145,12 +1165,16 @@
         }
     }
 
-    const hemiLight = new THREE.HemisphereLight(0xfffbeb, 0x334155, 0.9);
-    hemiLight.position.set(0, 80, 0);
+    // Triple-Layer Tropical Sunlight so Mobile Screens are Bright, Clear & Vibrant
+    const ambientLight = new THREE.AmbientLight(0xfffbeb, 1.35);
+    scene.add(ambientLight);
+
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xfde68a, 1.55);
+    hemiLight.position.set(0, 85, 0);
     scene.add(hemiLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfff7ed, 1.25);
-    dirLight.position.set(65, 110, 55);
+    const dirLight = new THREE.DirectionalLight(0xfffdf5, 2.15);
+    dirLight.position.set(65, 115, 55);
     dirLight.castShadow = true;
     dirLight.shadow.camera.top = 120;
     dirLight.shadow.camera.bottom = -120;
@@ -1161,13 +1185,14 @@
     const shadowRes = IS_TOUCH_DEVICE ? 1024 : 2048;
     dirLight.shadow.mapSize.width = shadowRes;
     dirLight.shadow.mapSize.height = shadowRes;
+    dirLight.shadow.bias = -0.0005;
     scene.add(dirLight);
 
     const colliders = [];
 
     function createBox(x, y, z, w, h, d, color, isSolid = true, castShadow = true) {
         const geo = new THREE.BoxGeometry(w, h, d);
-        const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.75, metalness: 0.08 });
+        const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.65, metalness: 0.05 });
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.set(x, y, z);
         mesh.castShadow = castShadow;
@@ -1186,26 +1211,26 @@
         return mesh;
     }
 
-    // Ground & Paved Roads
+    // Bright Warm Lagos Sandy-Ochre Ground & Clean Paved Roads
     const groundMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(320, 320),
-        new THREE.MeshStandardMaterial({ color: 0xc29b61, roughness: 0.95 })
+        new THREE.MeshStandardMaterial({ color: 0xe2b878, roughness: 0.88 })
     );
     groundMesh.rotation.x = -Math.PI / 2;
     groundMesh.receiveShadow = true;
     scene.add(groundMesh);
 
-    createBox(0, 0.03, 0, 240, 0.06, 15, 0x262930, false, false);
-    createBox(0, 0.04, 0, 15, 0.06, 240, 0x262930, false, false);
+    createBox(0, 0.03, 0, 240, 0.06, 15, 0x3b4252, false, false);
+    createBox(0, 0.04, 0, 15, 0.06, 240, 0x3b4252, false, false);
 
     for (let i = -105; i <= 105; i += 14) {
         if (Math.abs(i) < 12) continue;
-        createBox(i, 0.07, 0, 5, 0.02, 0.35, 0xfacc15, false, false);
-        createBox(0, 0.07, i, 0.35, 0.02, 5, 0xfacc15, false, false);
+        createBox(i, 0.07, 0, 5, 0.02, 0.35, 0xfde047, false, false);
+        createBox(0, 0.07, i, 0.35, 0.02, 5, 0xfde047, false, false);
     }
 
     // Football Pitch
-    createBox(-42, 0.05, 42, 34, 0.08, 24, 0x15803d, false, false);
+    createBox(-42, 0.05, 42, 34, 0.08, 24, 0x22c55e, false, false);
     createBox(-42, 0.1, 30, 34, 0.03, 0.3, 0xffffff, false, false);
     createBox(-42, 0.1, 54, 34, 0.03, 0.3, 0xffffff, false, false);
     createBox(-59, 0.1, 42, 0.3, 0.03, 24, 0xffffff, false, false);
@@ -1213,36 +1238,36 @@
     createBox(-42, 0.1, 42, 0.25, 0.03, 24, 0xffffff, false, false);
 
     function createGoalpost(x, z) {
-        createBox(x, 2, z - 3.5, 0.3, 4, 0.3, 0xf8fafc, true);
-        createBox(x, 2, z + 3.5, 0.3, 4, 0.3, 0xf8fafc, true);
-        createBox(x, 4, z, 0.3, 0.3, 7.3, 0xf8fafc, false);
+        createBox(x, 2, z - 3.5, 0.3, 4, 0.3, 0xffffff, true);
+        createBox(x, 2, z + 3.5, 0.3, 4, 0.3, 0xffffff, true);
+        createBox(x, 4, z, 0.3, 0.3, 7.3, 0xffffff, false);
     }
     createGoalpost(-57, 42);
     createGoalpost(-27, 42);
 
     // Market Stalls & Rooftop Bridges
-    const stallColors = [0xd97706, 0x2563eb, 0xdc2626, 0x059669, 0x7c3aed, 0xdb2777];
+    const stallColors = [0xf59e0b, 0x3b82f6, 0xef4444, 0x10b981, 0x8b5cf6, 0xec4899];
     const stallPositions = [
         [22, 22], [32, 22], [42, 22],
         [22, 34], [32, 34], [42, 34]
     ];
     stallPositions.forEach(([x, z], idx) => {
-        createBox(x, 0.9, z, 5.2, 1.8, 3.6, 0x78350f, true);
+        createBox(x, 0.9, z, 5.2, 1.8, 3.6, 0x92400e, true);
         createBox(x - 1.3, 2.0, z, 1.2, 0.4, 1.2, 0xef4444, false);
         createBox(x + 1.1, 2.0, z, 1.2, 0.4, 1.2, 0x22c55e, false);
         createBox(x, 3.3, z, 6.2, 0.45, 4.6, stallColors[idx % stallColors.length], true);
-        createBox(x - 2.6, 1.65, z - 1.8, 0.2, 3.3, 0.2, 0x5c2808, false);
-        createBox(x + 2.6, 1.65, z - 1.8, 0.2, 3.3, 0.2, 0x5c2808, false);
-        createBox(x - 2.6, 1.65, z + 1.8, 0.2, 3.3, 0.2, 0x5c2808, false);
-        createBox(x + 2.6, 1.65, z + 1.8, 0.2, 3.3, 0.2, 0x5c2808, false);
-        createBox(x + 3.4, 0.55, z, 1.5, 1.1, 1.5, 0x92400e, true);
+        createBox(x - 2.6, 1.65, z - 1.8, 0.2, 3.3, 0.2, 0x78350f, false);
+        createBox(x + 2.6, 1.65, z - 1.8, 0.2, 3.3, 0.2, 0x78350f, false);
+        createBox(x - 2.6, 1.65, z + 1.8, 0.2, 3.3, 0.2, 0x78350f, false);
+        createBox(x + 2.6, 1.65, z + 1.8, 0.2, 3.3, 0.2, 0x78350f, false);
+        createBox(x + 3.4, 0.55, z, 1.5, 1.1, 1.5, 0xb45309, true);
     });
 
-    createBox(27, 3.25, 22, 4.4, 0.25, 1.6, 0x92400e, true);
-    createBox(37, 3.25, 22, 4.4, 0.25, 1.6, 0x92400e, true);
-    createBox(27, 3.25, 34, 4.4, 0.25, 1.6, 0x92400e, true);
-    createBox(37, 3.25, 34, 4.4, 0.25, 1.6, 0x92400e, true);
-    createBox(32, 3.25, 28, 1.8, 0.25, 7.8, 0x92400e, true);
+    createBox(27, 3.25, 22, 4.4, 0.25, 1.6, 0xb45309, true);
+    createBox(37, 3.25, 22, 4.4, 0.25, 1.6, 0xb45309, true);
+    createBox(27, 3.25, 34, 4.4, 0.25, 1.6, 0xb45309, true);
+    createBox(37, 3.25, 34, 4.4, 0.25, 1.6, 0xb45309, true);
+    createBox(32, 3.25, 28, 1.8, 0.25, 7.8, 0xb45309, true);
 
     // Danfo Buses
     function createDanfo(x, z, rotY = 0) {
@@ -1253,7 +1278,7 @@
 
         const body = new THREE.Mesh(
             new THREE.BoxGeometry(4.6, 2.7, 9.2),
-            new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.45 })
+            new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4, emissive: 0xca8a04, emissiveIntensity: 0.12 })
         );
         body.position.y = 1.75;
         body.castShadow = true;
@@ -1269,20 +1294,20 @@
 
         const glass = new THREE.Mesh(
             new THREE.BoxGeometry(4.7, 0.85, 8.4),
-            new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.15, metalness: 0.8 })
+            new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.15, metalness: 0.6 })
         );
         glass.position.y = 2.45;
         group.add(glass);
 
         const rack = new THREE.Mesh(
             new THREE.BoxGeometry(3.8, 0.25, 6.2),
-            new THREE.MeshStandardMaterial({ color: 0x334155 })
+            new THREE.MeshStandardMaterial({ color: 0x475569 })
         );
         rack.position.y = 3.22;
         group.add(rack);
 
         const wheelGeo = new THREE.CylinderGeometry(0.68, 0.68, 0.55, 16);
-        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111827 });
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
         [[-2.25, 0.68, -2.8], [2.25, 0.68, -2.8], [-2.25, 0.68, 2.8], [2.25, 0.68, 2.8]].forEach(([wx, wy, wz]) => {
             const w = new THREE.Mesh(wheelGeo, wheelMat);
             w.rotation.z = Math.PI / 2;
@@ -1315,7 +1340,7 @@
 
         const cab = new THREE.Mesh(
             new THREE.BoxGeometry(2.3, 1.7, 3.2),
-            new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.5 })
+            new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.45 })
         );
         cab.position.y = 1.1;
         cab.castShadow = true;
@@ -1323,7 +1348,7 @@
 
         const roof = new THREE.Mesh(
             new THREE.BoxGeometry(2.4, 0.2, 3.3),
-            new THREE.MeshStandardMaterial({ color: 0x1e293b })
+            new THREE.MeshStandardMaterial({ color: 0x334155 })
         );
         roof.position.y = 2.05;
         g.add(roof);
@@ -1338,7 +1363,7 @@
     createKeke(-14, -14, 0.4);
     createKeke(14, 15, -0.8);
 
-    // Compound Houses
+    // Bright Compound Houses
     const buildings = [
         [-32, -32, 16, 11, 16, 0xfef08a],
         [-54, -28, 14, 15, 18, 0xfed7aa],
@@ -1351,20 +1376,20 @@
     ];
 
     buildings.forEach(([x, z, w, h, d, col]) => {
-        createBox(x, 0.35, z, w + 1.2, 0.7, d + 1.2, 0x475569, true);
+        createBox(x, 0.35, z, w + 1.2, 0.7, d + 1.2, 0x64748b, true);
         createBox(x, h / 2 + 0.35, z, w, h, d, col, true);
-        createBox(x, h + 0.85, z, w + 1.4, 1.0, d + 1.4, 0x7c2d12, true);
-        createBox(x + w / 2 + 1.2, 1.2, z, 2.2, 2.4, 2.2, 0x64748b, true);
+        createBox(x, h + 0.85, z, w + 1.4, 1.0, d + 1.4, 0x9a3412, true);
+        createBox(x + w / 2 + 1.2, 1.2, z, 2.2, 2.4, 2.2, 0x94a3b8, true);
     });
 
     // Stepping crate near [-32, 3.6, -18] key so both players & AI can vault up smoothly
-    createBox(-32, 1.2, -21.5, 4.5, 2.4, 3.2, 0x64748b, true);
+    createBox(-32, 1.2, -21.5, 4.5, 2.4, 3.2, 0x94a3b8, true);
 
     // Palm Trees
     function createPalmTree(x, z) {
         const trunk = new THREE.Mesh(
             new THREE.CylinderGeometry(0.32, 0.52, 8.5, 8),
-            new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 })
+            new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.85 })
         );
         trunk.position.set(x, 4.25, z);
         trunk.castShadow = true;
@@ -1373,7 +1398,7 @@
         for (let i = 0; i < 6; i++) {
             const frond = new THREE.Mesh(
                 new THREE.BoxGeometry(0.7, 0.15, 3.8),
-                new THREE.MeshStandardMaterial({ color: 0x15803d })
+                new THREE.MeshStandardMaterial({ color: 0x22c55e })
             );
             const angle = (i / 6) * Math.PI * 2;
             frond.position.set(x + Math.sin(angle) * 1.7, 8.3, z + Math.cos(angle) * 1.7);
@@ -1388,10 +1413,10 @@
 
     // Perimeter Walls
     const BOUNDARY = 95;
-    createBox(0, 3, -BOUNDARY, 194, 6, 3, 0x64748b, true);
-    createBox(0, 3, BOUNDARY, 194, 6, 3, 0x64748b, true);
-    createBox(-BOUNDARY, 3, 0, 3, 6, 194, 0x64748b, true);
-    createBox(BOUNDARY, 3, 0, 3, 6, 194, 0x64748b, true);
+    createBox(0, 3, -BOUNDARY, 194, 6, 3, 0x94a3b8, true);
+    createBox(0, 3, BOUNDARY, 194, 6, 3, 0x94a3b8, true);
+    createBox(-BOUNDARY, 3, 0, 3, 6, 194, 0x94a3b8, true);
+    createBox(BOUNDARY, 3, 0, 3, 6, 194, 0x94a3b8, true);
 
     const bystanders = [];
     const powerups = [];
@@ -1433,7 +1458,7 @@
         for (let i = 0; i < 3; i++) {
             const tyre = new THREE.Mesh(
                 new THREE.TorusGeometry(0.95, 0.32, 10, 20),
-                new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 })
+                new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 })
             );
             tyre.rotation.x = Math.PI / 2;
             tyre.position.y = 0.28 + i * 0.42;
@@ -1455,7 +1480,7 @@
         const g = new THREE.Group();
         const cab = new THREE.Mesh(
             new THREE.BoxGeometry(2.4, 1.8, 3.4),
-            new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.45 })
+            new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4, emissive: 0xca8a04, emissiveIntensity: 0.1 })
         );
         cab.position.y = 1.15;
         cab.castShadow = true;
@@ -1463,7 +1488,7 @@
 
         const roof = new THREE.Mesh(
             new THREE.BoxGeometry(2.5, 0.22, 3.5),
-            new THREE.MeshStandardMaterial({ color: 0x0f172a })
+            new THREE.MeshStandardMaterial({ color: 0x1e293b })
         );
         roof.position.y = 2.15;
         g.add(roof);
@@ -1489,7 +1514,7 @@
 
         const body = new THREE.Mesh(
             new THREE.BoxGeometry(0.75, 0.62, 1.35),
-            new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.7 })
+            new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.65 })
         );
         body.position.y = 0.65;
         body.castShadow = true;
@@ -1504,7 +1529,7 @@
 
         const head = new THREE.Mesh(
             new THREE.BoxGeometry(0.62, 0.56, 0.68),
-            new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.65 })
+            new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.65 })
         );
         head.position.set(0, 1.05, 0.82);
         root.add(head);
@@ -1518,14 +1543,14 @@
 
         const tail = new THREE.Mesh(
             new THREE.BoxGeometry(0.16, 0.5, 0.16),
-            new THREE.MeshStandardMaterial({ color: 0x78350f })
+            new THREE.MeshStandardMaterial({ color: 0x92400e })
         );
         tail.position.set(0, 0.95, -0.72);
         tail.rotation.x = -0.5;
         root.add(tail);
 
         const legGeo = new THREE.BoxGeometry(0.2, 0.52, 0.2);
-        const legMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x92400e });
         const legs = [];
         [[-0.24, 0.26, 0.46], [0.24, 0.26, 0.46], [-0.24, 0.26, -0.46], [0.24, 0.26, -0.46]].forEach(([lx, ly, lz]) => {
             const leg = new THREE.Mesh(legGeo, legMat);
@@ -1549,14 +1574,14 @@
     const bingoDog = createBingoDog();
     const galaSnackMesh = new THREE.Mesh(
         new THREE.CylinderGeometry(0.28, 0.28, 0.65, 12),
-        new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.4 })
+        new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.5 })
     );
     galaSnackMesh.rotation.z = Math.PI / 2;
     galaSnackMesh.visible = false;
     scene.add(galaSnackMesh);
 
-    // 🌧️ Tropical Lagos Rainstorm Particle System
-    const rainCount = 420;
+    // 🌧️ Tropical Lagos Sun-Shower Rain Particle System (Kept Bright for Mobile Visibility!)
+    const rainCount = 380;
     const rainGeo = new THREE.BufferGeometry();
     const rainPositions = new Float32Array(rainCount * 6);
     for (let i = 0; i < rainCount; i++) {
@@ -1571,7 +1596,7 @@
         rainPositions[i * 6 + 5] = rz - 0.2;
     }
     rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3));
-    const rainMat = new THREE.LineBasicMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.55 });
+    const rainMat = new THREE.LineBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.65 });
     const rainSystem = new THREE.LineSegments(rainGeo, rainMat);
     rainSystem.visible = false;
     scene.add(rainSystem);
@@ -1580,7 +1605,7 @@
     [[0, 12], [0, -18], [18, 0], [-20, 0], [0, 34], [-4, -32]].forEach(([px, pz]) => {
         const puddle = new THREE.Mesh(
             new THREE.CircleGeometry(2.8, 20),
-            new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.08, metalness: 0.85, transparent: true, opacity: 0.65 })
+            new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.08, metalness: 0.75, transparent: true, opacity: 0.65 })
         );
         puddle.rotation.x = -Math.PI / 2;
         puddle.position.set(px, 0.08, pz);
@@ -1593,10 +1618,12 @@
         STATE.isRainstorm = active;
         rainSystem.visible = active;
         puddleMeshes.forEach(p => { p.visible = active; });
-        scene.background.setHex(active ? 0x1e293b : 0x7dd3fc);
-        scene.fog.color.setHex(active ? 0x334155 : 0xbae6fd);
-        hemiLight.intensity = active ? 0.62 : 0.9;
-        dirLight.intensity = active ? 0.78 : 1.25;
+        // Keep sky and lighting bright even during tropical rain so mobile screens never look dark
+        scene.background.setHex(active ? 0x60a5fa : 0x87ceeb);
+        scene.fog.color.setHex(active ? 0xbfdbfe : 0xdbeafe);
+        ambientLight.intensity = active ? 1.2 : 1.35;
+        hemiLight.intensity = active ? 1.35 : 1.55;
+        dirLight.intensity = active ? 1.75 : 2.15;
 
         const wBtn = document.getElementById('btn-weather');
         if (wBtn) {
@@ -1604,7 +1631,7 @@
         }
         if (active && STATE.isRunning) {
             sfx.playThunder();
-            pushKillfeed('🌧️ Lagos Rainstorm! +25% Slide Dash', 'info');
+            pushKillfeed('🌧️ Lagos Sun-Shower! +25% Slide Dash', 'info');
         }
     }
 
@@ -1754,7 +1781,7 @@
     // Football on Pitch
     const ballMesh = new THREE.Mesh(
         new THREE.SphereGeometry(0.65, 16, 16),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 })
     );
     ballMesh.position.set(-42, 0.65, 42);
     ballMesh.castShadow = true;
@@ -1781,7 +1808,7 @@
 
     const japaBeacon = new THREE.Mesh(
         new THREE.CylinderGeometry(3.2, 3.2, 5.5, 24, 1, true),
-        new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.22, side: THREE.DoubleSide })
+        new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.28, side: THREE.DoubleSide })
     );
     japaBeacon.position.y = 2.75;
     japaZoneGroup.add(japaBeacon);
@@ -1800,7 +1827,7 @@
     zoboCoords.forEach(([x, y, z]) => {
         const mesh = new THREE.Mesh(
             new THREE.CylinderGeometry(0.45, 0.38, 1.05, 12),
-            new THREE.MeshStandardMaterial({ color: 0xbe123c, emissive: 0x881337, emissiveIntensity: 0.4 })
+            new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.45 })
         );
         mesh.position.set(x, y, z);
         scene.add(mesh);
@@ -1843,7 +1870,7 @@
     lootCoords.forEach(([x, y, z]) => {
         const mesh = new THREE.Mesh(
             new THREE.OctahedronGeometry(0.85, 0),
-            new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xd97706, emissiveIntensity: 0.5, metalness: 0.6, roughness: 0.2 })
+            new THREE.MeshStandardMaterial({ color: 0xfde047, emissive: 0xf59e0b, emissiveIntensity: 0.65, metalness: 0.5, roughness: 0.15 })
         );
         mesh.position.set(x, y, z);
         scene.add(mesh);
@@ -1855,7 +1882,7 @@
 
         const torso = new THREE.Mesh(
             new THREE.BoxGeometry(1.15, 1.45, 0.65),
-            new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.6 })
+            new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.5, emissive: shirtColor, emissiveIntensity: 0.12 })
         );
         torso.position.y = 1.95;
         torso.castShadow = true;
@@ -1863,7 +1890,7 @@
 
         const head = new THREE.Mesh(
             new THREE.BoxGeometry(0.82, 0.82, 0.82),
-            new THREE.MeshStandardMaterial({ color: 0x7c4727, roughness: 0.55 })
+            new THREE.MeshStandardMaterial({ color: 0x8d5524, roughness: 0.5 })
         );
         head.position.y = 3.15;
         head.castShadow = true;
@@ -1900,9 +1927,9 @@
         return { root, torso, head, cap, leftArm, rightArm, leftLeg, rightLeg };
     }
 
-    const playerChar = createCharacter(0x1d4ed8, 0x0f172a, 0x1e3a8a);
-    const aiChar = createCharacter(0xe11d48, 0x1f2937, 0x9f1239);
-    const backupCopChar = createCharacter(0x0f172a, 0x020617, 0xdc2626);
+    const playerChar = createCharacter(0x2563eb, 0x0f172a, 0x1d4ed8);
+    const aiChar = createCharacter(0xf43f5e, 0x1f2937, 0xbe123c);
+    const backupCopChar = createCharacter(0x1d4ed8, 0x0f172a, 0xef4444);
     backupCopChar.root.visible = false;
     let aiVelY = 0;
     let backupVelY = 0;
@@ -1927,7 +1954,7 @@
     const gpsGroup = new THREE.Group();
     const gpsRing = new THREE.Mesh(
         new THREE.RingGeometry(1.15, 1.38, 28),
-        new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.75 })
+        new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
     );
     gpsRing.rotation.x = -Math.PI / 2;
     gpsRing.position.y = 0.12;
@@ -1944,7 +1971,7 @@
 
     function applyCharacterColors() {
         const isPlayerPolice = STATE.role === 'police';
-        let playerShirt = isPlayerPolice ? 0x2563eb : 0xe11d48;
+        let playerShirt = isPlayerPolice ? 0x2563eb : 0xf43f5e;
         let playerHat = isPlayerPolice ? 0x1e3a8a : 0x9f1239;
         if (STATE.playerDrip === 'eagles') {
             playerShirt = 0x16a34a;
@@ -1954,8 +1981,12 @@
             playerHat = 0x78350f;
         }
         playerChar.torso.material.color.setHex(playerShirt);
+        playerChar.torso.material.emissive.setHex(playerShirt);
         playerChar.cap.material.color.setHex(playerHat);
-        aiChar.torso.material.color.setHex(isPlayerPolice ? 0xe11d48 : 0x2563eb);
+
+        const aiShirt = isPlayerPolice ? 0xf43f5e : 0x2563eb;
+        aiChar.torso.material.color.setHex(aiShirt);
+        aiChar.torso.material.emissive.setHex(aiShirt);
         aiChar.cap.material.color.setHex(isPlayerPolice ? 0x9f1239 : 0x1e3a8a);
         backupCopChar.root.visible = !isPlayerPolice;
     }
@@ -1970,11 +2001,26 @@
     let jumpBufferTimer = 0;
 
     let cameraYaw = 0;
-    let cameraPitch = 0.36;
+    let cameraPitch = 0.30;
     let targetCameraYaw = 0;
-    let targetCameraPitch = 0.36;
-    let cameraDistance = 12.5;
+    let targetCameraPitch = 0.30;
+    let cameraDistance = 12.2;
+    let manualLookGraceTimer = 0;
     const smoothedCameraFocus = new THREE.Vector3();
+
+    function normalizeAngleDiff(target, current) {
+        let diff = target - current;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        return diff;
+    }
+
+    function snapCameraBehindPlayer() {
+        // Player faces playerChar.root.rotation.y. Camera sits behind player at rotation.y + Math.PI
+        const desiredYaw = playerChar.root.rotation.y + Math.PI;
+        targetCameraYaw = cameraYaw + normalizeAngleDiff(desiredYaw, cameraYaw);
+        targetCameraPitch = 0.30;
+    }
 
     function spawnSmokeCloud(pos, ownerRole) {
         const group = new THREE.Group();
@@ -1982,7 +2028,7 @@
         for (let i = 0; i < 7; i++) {
             const puff = new THREE.Mesh(
                 new THREE.SphereGeometry(1.5 + Math.random() * 1.2, 10, 10),
-                new THREE.MeshStandardMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.65, roughness: 1 })
+                new THREE.MeshStandardMaterial({ color: 0xcbd5e1, transparent: true, opacity: 0.65, roughness: 1 })
             );
             puff.position.set((Math.random() - 0.5) * 3.2, 1.0 + Math.random() * 1.8, (Math.random() - 0.5) * 3.2);
             group.add(puff);
@@ -1998,7 +2044,7 @@
             new THREE.MeshStandardMaterial({
                 color: isFromPlayer ? 0x38bdf8 : 0xf43f5e,
                 emissive: isFromPlayer ? 0x0284c7 : 0xe11d48,
-                emissiveIntensity: 0.45
+                emissiveIntensity: 0.55
             })
         );
         mesh.position.copy(originPos).add(new THREE.Vector3(0, 2.4, 0));
@@ -2055,14 +2101,18 @@
         let cd = STATE.hasWaterCooler ? 0.65 : 1.3;
         if (STATE.isRainstorm) cd *= 0.75;
         STATE.throwCooldown = cd;
-        throwPureWater(playerChar.root.position, cameraYaw, cameraPitch, true);
+        // On mobile, if the player turned the character with the joystick, aim along camera or character direction
+        const aimYaw = IS_TOUCH_DEVICE && lookTouchId === null
+            ? playerChar.root.rotation.y + Math.PI
+            : cameraYaw;
+        throwPureWater(playerChar.root.position, aimYaw, cameraPitch, true);
         if (STATE.isMultiplayerRoom) {
             mpManager.sendPacket({
                 type: 'WATER_THROW',
                 x: playerChar.root.position.x,
                 y: playerChar.root.position.y,
                 z: playerChar.root.position.z,
-                yaw: cameraYaw,
+                yaw: aimYaw,
                 pitch: cameraPitch
             });
         }
@@ -2146,6 +2196,12 @@
 
     function resetPositions() {
         playerChar.root.position.set(0, 0, 28);
+        playerChar.root.rotation.y = Math.PI;
+        cameraYaw = 0;
+        targetCameraYaw = 0;
+        cameraPitch = 0.30;
+        targetCameraPitch = 0.30;
+
         aiChar.root.position.set(0, 0, -42);
         aiPrevPos.copy(aiChar.root.position);
         backupCopChar.root.position.set(-44, 0, -18);
@@ -2190,7 +2246,7 @@
         const inSanctuary = isThiefInGreenSanctuary();
         japaRing.material.color.setHex(inSanctuary ? 0xfacc15 : unlocked ? 0x10b981 : 0xef4444);
         japaBeacon.material.color.setHex(inSanctuary ? 0xfde047 : unlocked ? 0x34d399 : 0xf43f5e);
-        japaBeacon.material.opacity = inSanctuary ? 0.38 : 0.22;
+        japaBeacon.material.opacity = inSanctuary ? 0.38 : 0.25;
 
         const banner = document.getElementById('danfo-lock-banner');
         const statusEl = document.getElementById('danfo-lock-status');
@@ -2206,13 +2262,13 @@
             if (statusEl) {
                 if (!unlocked) {
                     statusEl.innerText = `🔒 Grab 3 Gold Keys on roofs to unlock Danfo`;
-                    statusEl.className = 'text-rose-400 font-bold';
+                    statusEl.className = 'text-rose-300 font-bold';
                 } else if (inSanctuary || STATE.boardingProgress > 0) {
                     statusEl.innerText = `🛡️ SAFE ZONE — Boarding Danfo...`;
                     statusEl.className = 'text-emerald-300 font-extrabold animate-pulse';
                 } else {
                     statusEl.innerText = `🔓 Danfo Unlocked! Enter the Green Ring!`;
-                    statusEl.className = 'text-emerald-400 font-bold';
+                    statusEl.className = 'text-emerald-300 font-bold';
                 }
             }
         } else {
@@ -2283,7 +2339,7 @@
                 ? `🚨 Cop: ${distOpp}m`
                 : `🎯 Thief: ${distOpp}m`;
             targetDistanceEl.className = (STATE.role === 'thief' && distOpp <= 15)
-                ? 'text-rose-400 font-extrabold animate-pulse'
+                ? 'text-rose-300 font-extrabold animate-pulse'
                 : 'text-cyan-300 font-semibold';
         }
         if (japaDistanceEl) japaDistanceEl.innerText = `🚐 Bus: ${distJapa}m`;
@@ -2314,12 +2370,12 @@
         const w = minimapCanvas.width, h = minimapCanvas.height, cx = w / 2, cy = h / 2;
         ctx.clearRect(0, 0, w, h);
 
-        ctx.fillStyle = 'rgba(10, 15, 28, 0.85)';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
         ctx.beginPath();
         ctx.arc(cx, cy, cx - 2, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
         ctx.beginPath();
         ctx.arc(cx, cy, (cx - 2) * 0.5, 0, Math.PI * 2);
         ctx.stroke();
@@ -2433,18 +2489,16 @@
 
     function pauseGame() {
         STATE.isRunning = false;
-        joystickInput.x = 0;
-        joystickInput.y = 0;
-        joystickInput.active = false;
+        resetJoystick();
+        lookTouchId = null;
         pauseMenu?.classList.remove('hidden');
         if (document.pointerLockElement) document.exitPointerLock();
     }
 
     function endGame() {
         STATE.isRunning = false;
-        joystickInput.x = 0;
-        joystickInput.y = 0;
-        joystickInput.active = false;
+        resetJoystick();
+        lookTouchId = null;
         const vignetteEl = document.getElementById('panic-vignette');
         if (vignetteEl) vignetteEl.style.opacity = '0';
         uiLayer?.classList.add('hidden');
@@ -2581,6 +2635,7 @@
         if (k === 'q') triggerPlayerSmoke();
         if (k === 'f') triggerPlayerWaterThrow();
         if (k === 'g') tossGalaSnack();
+        if (k === 'c') snapCameraBehindPlayer();
         if (k === '1') buyInGameZobo();
         if (k === '2') buyInGameDecoy();
         if (k === 'p' || e.key === 'Escape') {
@@ -2599,11 +2654,12 @@
     });
 
     window.addEventListener('mousemove', (e) => {
-        if (!STATE.isRunning) return;
+        if (!STATE.isRunning || IS_TOUCH_DEVICE) return;
         const dx = Math.max(-95, Math.min(95, e.movementX || 0));
         const dy = Math.max(-95, Math.min(95, e.movementY || 0));
         targetCameraYaw -= dx * STATE.mouseSensitivity;
-        targetCameraPitch = Math.max(0.14, Math.min(1.02, targetCameraPitch + dy * STATE.mouseSensitivity * 0.85));
+        targetCameraPitch = Math.max(0.14, Math.min(0.85, targetCameraPitch + dy * STATE.mouseSensitivity * 0.8));
+        manualLookGraceTimer = 1.2;
     });
 
     container.addEventListener('mousedown', (e) => {
@@ -2620,37 +2676,43 @@
     window.addEventListener('contextmenu', (e) => e.preventDefault());
 
     // =========================================================================
-    // FULL MULTI-TOUCH VIRTUAL JOYSTICK + INDEPENDENT CAMERA LOOK FOR MOBILE
+    // RE-ENGINEERED MULTI-TOUCH JOYSTICK + 360° MOBILE CAMERA SYSTEM
+    // Tracks each finger by touch.identifier across the whole window so left-thumb
+    // steering and right-thumb camera orbiting never conflict or drop!
     // =========================================================================
     const joystickZone = document.getElementById('joystick-zone');
     const joystickKnob = document.getElementById('joystick-knob');
     let joystickTouchId = null;
+    let joystickCenter = { x: 0, y: 0, maxRadius: 46 };
     let lookTouchId = null;
     let lastLookX = 0;
     let lastLookY = 0;
 
-    function updateJoystickFromTouch(touch) {
-        if (!joystickZone || !joystickKnob) return;
-        const rect = joystickZone.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const maxRadius = rect.width * 0.38;
-
-        const rawDx = touch.clientX - centerX;
-        const rawDy = touch.clientY - centerY;
+    function updateJoystickFromCoords(clientX, clientY) {
+        if (!joystickKnob) return;
+        const rawDx = clientX - joystickCenter.x;
+        const rawDy = clientY - joystickCenter.y;
         const dist = Math.hypot(rawDx, rawDy);
-        const clampedDist = Math.min(maxRadius, dist);
+        const maxR = joystickCenter.maxRadius;
+        const clampedDist = Math.min(maxR, dist);
         const angle = Math.atan2(rawDy, rawDx);
 
         const knobX = Math.cos(angle) * clampedDist;
         const knobY = Math.sin(angle) * clampedDist;
         joystickKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
 
-        const normMagnitude = clampedDist / maxRadius;
-        joystickInput.x = (knobX / maxRadius);
-        joystickInput.y = -(knobY / maxRadius); // Up on screen = +1 forward
-        joystickInput.active = normMagnitude > 0.08;
-        joystickInput.isSprinting = normMagnitude > 0.72;
+        const normMagnitude = clampedDist / maxR;
+        if (normMagnitude > 0.08) {
+            joystickInput.x = knobX / maxR;
+            joystickInput.y = -(knobY / maxR); // Up on screen = +1 forward
+            joystickInput.active = true;
+            joystickInput.isSprinting = normMagnitude > 0.65;
+        } else {
+            joystickInput.x = 0;
+            joystickInput.y = 0;
+            joystickInput.active = false;
+            joystickInput.isSprinting = false;
+        }
     }
 
     function resetJoystick() {
@@ -2662,92 +2724,98 @@
         if (joystickKnob) joystickKnob.style.transform = `translate(0px, 0px)`;
     }
 
-    if (joystickZone) {
-        joystickZone.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (!STATE.showTouchControls) {
-                STATE.showTouchControls = true;
-                syncTouchControlsVisibility();
-            }
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const t = e.changedTouches[i];
-                if (joystickTouchId === null) {
-                    joystickTouchId = t.identifier;
-                    updateJoystickFromTouch(t);
-                    break;
-                }
-            }
-        }, { passive: false });
-
-        joystickZone.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const t = e.changedTouches[i];
-                if (t.identifier === joystickTouchId) {
-                    updateJoystickFromTouch(t);
-                    break;
-                }
-            }
-        }, { passive: false });
-
-        const endJoy = (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === joystickTouchId) {
-                    resetJoystick();
-                    break;
-                }
-            }
-        };
-        joystickZone.addEventListener('touchend', endJoy, { passive: true });
-        joystickZone.addEventListener('touchcancel', endJoy, { passive: true });
+    function isInteractiveUIElement(target) {
+        if (!target || !target.closest) return false;
+        return Boolean(target.closest('button, input, a, summary, details'));
     }
 
-    // Right-side / Free-area Multi-Touch Camera Orbit
-    container.addEventListener('touchstart', (e) => {
+    // Unified Window Multi-Touch Handler (`passive: false` prevents pinch-zoom/scroll glitches when 2 thumbs are down)
+    window.addEventListener('touchstart', (e) => {
         if (!STATE.showTouchControls) {
             STATE.showTouchControls = true;
             syncTouchControlsVisibility();
         }
+        if (!STATE.isRunning) return;
+
         for (let i = 0; i < e.changedTouches.length; i++) {
             const t = e.changedTouches[i];
-            if (t.identifier !== joystickTouchId && lookTouchId === null) {
+            const target = t.target;
+
+            // 1. Check if this finger landed on the Left Joystick
+            if (joystickTouchId === null && joystickZone && (joystickZone.contains(target) || target === joystickZone)) {
+                e.preventDefault();
+                joystickTouchId = t.identifier;
+                const rect = joystickZone.getBoundingClientRect();
+                joystickCenter.x = rect.left + rect.width / 2;
+                joystickCenter.y = rect.top + rect.height / 2;
+                joystickCenter.maxRadius = Math.max(36, rect.width * 0.38);
+                updateJoystickFromCoords(t.clientX, t.clientY);
+                continue;
+            }
+
+            // 2. Ignore touches that landed on action/HUD buttons
+            if (isInteractiveUIElement(target)) {
+                continue;
+            }
+
+            // 3. Otherwise, assign this finger to 360° Camera Look!
+            if (lookTouchId === null && t.identifier !== joystickTouchId) {
+                e.preventDefault();
                 lookTouchId = t.identifier;
                 lastLookX = t.clientX;
                 lastLookY = t.clientY;
-                break;
+                manualLookGraceTimer = 2.0;
             }
         }
-    }, { passive: true });
+    }, { passive: false });
 
-    container.addEventListener('touchmove', (e) => {
+    window.addEventListener('touchmove', (e) => {
         if (!STATE.isRunning) return;
+
+        let handled = false;
         for (let i = 0; i < e.changedTouches.length; i++) {
             const t = e.changedTouches[i];
-            if (t.identifier === lookTouchId) {
-                const dx = t.clientX - lastLookX;
-                const dy = t.clientY - lastLookY;
+
+            if (t.identifier === joystickTouchId) {
+                handled = true;
+                updateJoystickFromCoords(t.clientX, t.clientY);
+            } else if (t.identifier === lookTouchId) {
+                handled = true;
+                // Clamp per-frame delta to prevent multi-touch hardware jump spikes
+                const rawDx = t.clientX - lastLookX;
+                const rawDy = t.clientY - lastLookY;
                 lastLookX = t.clientX;
                 lastLookY = t.clientY;
-                const touchSens = (STATE.mouseSensitivity / 0.0010) * 0.0055;
+
+                const dx = Math.max(-48, Math.min(48, rawDx));
+                const dy = Math.max(-48, Math.min(48, rawDy));
+
+                const touchSens = (STATE.mouseSensitivity / 0.0012) * 0.0068;
                 targetCameraYaw -= dx * touchSens;
-                targetCameraPitch = Math.max(0.14, Math.min(1.02, targetCameraPitch + dy * touchSens * 0.8));
-                break;
+                // Keep mobile pitch within a comfortable chase horizon (0.18 to 0.72 rad)
+                targetCameraPitch = Math.max(0.18, Math.min(0.72, targetCameraPitch + dy * touchSens * 0.65));
+                manualLookGraceTimer = 2.0;
             }
         }
-    }, { passive: true });
 
-    const endLook = (e) => {
+        if (handled) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    const handleGlobalTouchEnd = (e) => {
         for (let i = 0; i < e.changedTouches.length; i++) {
-            if (e.changedTouches[i].identifier === lookTouchId) {
+            const id = e.changedTouches[i].identifier;
+            if (id === joystickTouchId) {
+                resetJoystick();
+            }
+            if (id === lookTouchId) {
                 lookTouchId = null;
-                break;
             }
         }
     };
-    container.addEventListener('touchend', endLook, { passive: true });
-    container.addEventListener('touchcancel', endLook, { passive: true });
+    window.addEventListener('touchend', handleGlobalTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handleGlobalTouchEnd, { passive: true });
 
     // Mobile Action Buttons (Support instant touchstart so players don't lose a frame)
     function bindMobileActionButton(id, handler) {
@@ -2764,10 +2832,11 @@
         });
     }
 
-    bindMobileActionButton('btn-touch-jump', () => { jumpBufferTimer = 0.2; });
+    bindMobileActionButton('btn-touch-jump', () => { jumpBufferTimer = 0.22; });
     bindMobileActionButton('btn-touch-sprint', () => triggerPlayerDash());
     bindMobileActionButton('btn-touch-throw', () => triggerPlayerWaterThrow());
     bindMobileActionButton('btn-touch-smoke', () => triggerPlayerSmoke());
+    bindMobileActionButton('btn-touch-cam-reset', () => snapCameraBehindPlayer());
 
     // Menu, Shop & HUD Button Listeners
     document.getElementById('btn-police')?.addEventListener('click', () => {
@@ -2942,7 +3011,7 @@
         });
     });
 
-    // Pause, Audio, Sensitivity & Game Over Controls
+    // Pause, Audio, Sensitivity, Brightness & Game Over Controls
     document.getElementById('btn-pause-hud')?.addEventListener('click', () => pauseGame());
     document.getElementById('btn-resume')?.addEventListener('click', () => {
         STATE.isRunning = true;
@@ -2977,13 +3046,21 @@
 
     document.getElementById('btn-autocam')?.addEventListener('click', (e) => {
         STATE.autoCam = !STATE.autoCam;
-        e.currentTarget.innerText = `🎥 Cam: ${STATE.autoCam ? 'ON' : 'OFF'}`;
+        e.currentTarget.innerText = `🎥 Follow Cam: ${STATE.autoCam ? 'ON' : 'OFF'}`;
     });
 
     document.getElementById('sens-slider')?.addEventListener('input', (e) => {
         const val = Number(e.target.value);
-        STATE.mouseSensitivity = (val / 40) * 0.0010;
+        STATE.mouseSensitivity = (val / 50) * 0.0012;
         const lbl = document.getElementById('sens-value');
+        if (lbl) lbl.innerText = `${val}%`;
+    });
+
+    document.getElementById('bright-slider')?.addEventListener('input', (e) => {
+        const val = Number(e.target.value);
+        STATE.exposureLevel = val / 100;
+        if (renderer) renderer.toneMappingExposure = STATE.exposureLevel;
+        const lbl = document.getElementById('bright-value');
         if (lbl) lbl.innerText = `${val}%`;
     });
 
@@ -3038,6 +3115,9 @@
             if (STATE.tackleBreakCooldown > 0) STATE.tackleBreakCooldown = Math.max(0, STATE.tackleBreakCooldown - dt);
             if (STATE.sanctuaryNoticeCooldown > 0) STATE.sanctuaryNoticeCooldown = Math.max(0, STATE.sanctuaryNoticeCooldown - dt);
             if (STATE.policeKeyNoticeCooldown > 0) STATE.policeKeyNoticeCooldown = Math.max(0, STATE.policeKeyNoticeCooldown - dt);
+            if (manualLookGraceTimer > 0 && lookTouchId === null) {
+                manualLookGraceTimer = Math.max(0, manualLookGraceTimer - dt);
+            }
 
             if (STATE.comboTimer > 0) {
                 STATE.comboTimer -= dt;
@@ -3058,9 +3138,9 @@
                 pushKillfeed("🚐 Danfo moved to a new stop!", 'info');
             }
 
-            // 1. Update Camera Angles Smoothly First
-            cameraYaw += (targetCameraYaw - cameraYaw) * Math.min(1, dt * 22);
-            cameraPitch += (targetCameraPitch - cameraPitch) * Math.min(1, dt * 22);
+            // 1. Smoothly Interpolate Camera Angles First
+            cameraYaw += (targetCameraYaw - cameraYaw) * Math.min(1, dt * 18);
+            cameraPitch += (targetCameraPitch - cameraPitch) * Math.min(1, dt * 18);
 
             // 2. Player Movement Relative to Camera (Combines Keyboard WASD + Mobile Virtual Joystick)
             const keyForward = (keys.w ? 1 : 0) - (keys.s ? 1 : 0);
@@ -3096,6 +3176,7 @@
 
             if (STATE.dashActiveTimer <= 0) {
                 if (isMoving) {
+                    // Use the current cameraYaw so pushing Up on the stick ALWAYS runs toward where the camera faces
                     const camForward = new THREE.Vector3(-Math.sin(cameraYaw), 0, -Math.cos(cameraYaw));
                     const camRight = new THREE.Vector3(Math.cos(cameraYaw), 0, -Math.sin(cameraYaw));
                     const wishDir = new THREE.Vector3()
@@ -3103,18 +3184,24 @@
                         .addScaledVector(camRight, moveRight)
                         .normalize();
 
-                    const effectiveSpeed = baseSpeed * (joystickInput.active ? Math.max(0.45, inputMag) : 1.0);
+                    const effectiveSpeed = baseSpeed * (joystickInput.active ? Math.max(0.5, inputMag) : 1.0);
                     playerVel.x = wishDir.x * effectiveSpeed;
                     playerVel.z = wishDir.z * effectiveSpeed;
 
                     const targetRot = Math.atan2(wishDir.x, wishDir.z);
-                    let diff = targetRot - playerChar.root.rotation.y;
-                    while (diff < -Math.PI) diff += Math.PI * 2;
-                    while (diff > Math.PI) diff -= Math.PI * 2;
-                    playerChar.root.rotation.y += diff * Math.min(1, dt * 14);
+                    const rotDiff = normalizeAngleDiff(targetRot, playerChar.root.rotation.y);
+                    playerChar.root.rotation.y += rotDiff * Math.min(1, dt * 15);
 
-                    if (STATE.autoCam && Math.abs(moveRight) > 0.25 && moveForward >= -0.1) {
-                        targetCameraYaw -= moveRight * 0.45 * dt;
+                    // Smart Follow-Cam: Only assist-turn the camera when the player is NOT touching the right look area!
+                    if (STATE.autoCam && lookTouchId === null && manualLookGraceTimer <= 0) {
+                        if (joystickInput.active) {
+                            // Responsive single-thumb steering on mobile when right thumb isn't dragging
+                            if (moveForward >= -0.25 && Math.abs(moveRight) > 0.12) {
+                                targetCameraYaw -= moveRight * 1.65 * dt;
+                            }
+                        } else if (Math.abs(moveRight) > 0.25 && moveForward >= -0.1) {
+                            targetCameraYaw -= moveRight * 0.65 * dt;
+                        }
                     }
                 } else {
                     const friction = STATE.isRainstorm ? 0.015 : 0.001;
@@ -3197,11 +3284,7 @@
             }
 
             pPos.x = Math.max(-BOUNDARY + 2, Math.min(BOUNDARY - 2, pPos.x));
-            pPos.z = Math.max(-BOUNDARY + 2, Math.min(BOUNDARY - 2, posZClamp(pPos.z)));
-
-            function posZClamp(v) {
-                return Math.max(-BOUNDARY + 2, Math.min(BOUNDARY - 2, v));
-            }
+            pPos.z = Math.max(-BOUNDARY + 2, Math.min(BOUNDARY - 2, pPos.z));
 
             if (pPos.y > 10.2 && playerGrounded) {
                 advanceStreetBounty('highroof');
@@ -3338,7 +3421,6 @@
                         if (pos.y >= c.maxY - 0.65 && velY <= 0) {
                             aiSupportY = Math.max(aiSupportY, c.maxY);
                         } else if (c.maxY <= 4.6 && pos.y < c.maxY) {
-                            // Acrobatic vault onto market stalls, crates, Danfo buses, and ledges
                             if (pos.y + 1.8 >= c.maxY) {
                                 pos.y = c.maxY;
                                 velY = Math.max(0, velY);
@@ -3348,7 +3430,6 @@
                                 pos.y += 0.25;
                             }
                         } else {
-                            // Tall building wall: slide smoothly around it instead of getting stuck
                             const overlapLeft = (pos.x + r) - c.minX;
                             const overlapRight = c.maxX - (pos.x - r);
                             const overlapFront = (pos.z + r) - c.minZ;
@@ -3359,14 +3440,12 @@
                             else if (minOverlap === overlapFront) pos.z = c.minZ - r;
                             else pos.z = c.maxZ + r;
 
-                            // Strafe perpendicular to wall
                             pos.x += -moveDir.z * speed * dt * 0.85;
                             pos.z += moveDir.x * speed * dt * 0.85;
                         }
                     }
                 }
 
-                // If AI is approaching an elevated key/target and is currently below it, jump!
                 if (desiredY > pos.y + 1.1 && pos.y <= aiSupportY + 0.1 && velY <= 0) {
                     const distToGoalXZ = Math.hypot(aiGoal.x - pos.x, aiGoal.z - pos.z);
                     if (distToGoalXZ < 6.5 && STATE.aiJumpCooldown <= 0) {
@@ -3375,7 +3454,6 @@
                     }
                 }
 
-                // Block AI Police from entering the unlocked Green Danfo Sanctuary Ring
                 if (STATE.role === 'thief' && isDanfoUnlockedForThief()) {
                     const jPos = japaZoneGroup.position;
                     const dx = pos.x - jPos.x;
@@ -3404,7 +3482,6 @@
             const aPos = aiChar.root.position;
             let aiSpeed = STATE.difficulty === 'hard' ? 13.8 : STATE.difficulty === 'normal' ? 12.6 : 11.2;
             if (STATE.role === 'police') {
-                // Make AI Thief agile and fast when hunting rooftop keys
                 aiSpeed *= 1.12;
             }
             if (STATE.role === 'thief' && STATE.isWarrantMode) {
@@ -3436,14 +3513,12 @@
             } else {
                 let desiredGoalY = 0;
                 if (STATE.role === 'police') {
-                    // AI IS THE THIEF: Prioritize hunting uncollected Gold Keys & jumping to grab them!
                     let nextKey = null;
                     let bestKeyScore = Infinity;
                     missionTargets.forEach(t => {
                         if (!t.collected) {
                             const dToAI = aPos.distanceTo(t.mesh.position);
                             const dToCop = pPos.distanceTo(t.mesh.position);
-                            // Prefer the nearest key, slightly weighting keys further from the Police player
                             const score = dToAI - Math.min(10, dToCop * 0.25);
                             if (score < bestKeyScore) {
                                 bestKeyScore = score;
@@ -3455,7 +3530,6 @@
                     if (nextKey) {
                         aiGoal.copy(nextKey.mesh.position);
                         desiredGoalY = nextKey.mesh.position.y;
-                        // Weave slightly if Police is right in front of the AI Thief, but keep advancing toward the key
                         const distToCop = aPos.distanceTo(pPos);
                         const distToKeyXZ = Math.hypot(aPos.x - aiGoal.x, aPos.z - aiGoal.z);
                         if (distToCop < 7.5 && distToKeyXZ > 4.5) {
@@ -3463,20 +3537,17 @@
                             aiGoal.addScaledVector(awayFromCop, 4.0);
                         }
                     } else {
-                        // All 3 keys collected! Sprint straight for the unlocked Green Danfo Bus!
                         aiGoal.copy(japaZoneGroup.position);
                         desiredGoalY = 0;
                     }
                 } else {
-                    // AI IS THE POLICE: Chase the player Thief
                     aiGoal.copy(pPos).addScaledVector(playerVel, 0.22);
                     desiredGoalY = pPos.y;
                 }
 
-                // Unstuck detection: if AI hasn't moved horizontally in 0.45s, jump and sidestep!
                 const movedXZ = Math.hypot(aPos.x - aiPrevPos.x, aPos.z - aiPrevPos.z);
                 aiPrevPos.copy(aPos);
-                if (movedXZ < speedThreshold(aiSpeed, dt)) {
+                if (movedXZ < aiSpeed * dt * 0.18) {
                     STATE.aiStuckTimer += dt;
                     if (STATE.aiStuckTimer > 0.42) {
                         STATE.aiStuckTimer = 0;
@@ -3507,10 +3578,6 @@
                     const aimYaw = Math.atan2(-(leadPos.x - aPos.x), -(leadPos.z - aPos.z)) + scatter;
                     throwPureWater(aPos, aimYaw, 0.22, false);
                 }
-            }
-
-            function speedThreshold(spd, delta) {
-                return spd * delta * 0.18;
             }
 
             // 3B. Backup MopOl Officer
@@ -3552,9 +3619,9 @@
             const closestCopDist = Math.min(aiDistToPlayer, backupDistToPlayer);
             const vignetteEl = document.getElementById('panic-vignette');
             if (STATE.role === 'thief') {
-                const panicAlpha = closestCopDist < 22
-                    ? Math.min(0.95, (22 - closestCopDist) / 16)
-                    : (STATE.isWarrantMode ? 0.22 : 0);
+                const panicAlpha = closestCopDist < 20
+                    ? Math.min(0.75, (20 - closestCopDist) / 18)
+                    : (STATE.isWarrantMode ? 0.15 : 0);
                 if (vignetteEl) vignetteEl.style.opacity = String(panicAlpha.toFixed(2));
 
                 if (closestCopDist < 18) {
@@ -3702,7 +3769,6 @@
                     const horizDist = Math.hypot(aPos.x - t.mesh.position.x, aPos.z - t.mesh.position.z);
                     const vertDiff = t.mesh.position.y - aPos.y;
 
-                    // If AI Thief is close horizontally to an elevated key, leap up to grab it!
                     if (horizDist < 4.2 && vertDiff > 0.8 && aiVelY <= 0) {
                         aiVelY = 16.4;
                         sfx.playJump();
@@ -3847,10 +3913,10 @@
         // Camera Follow
         const desiredFocus = new THREE.Vector3(
             playerChar.root.position.x,
-            playerChar.root.position.y + 2.5,
+            playerChar.root.position.y + 2.6,
             playerChar.root.position.z
         );
-        smoothedCameraFocus.lerp(desiredFocus, Math.min(1, dt * 16));
+        smoothedCameraFocus.lerp(desiredFocus, Math.min(1, dt * 18));
 
         const camOffset = new THREE.Vector3(
             Math.sin(cameraYaw) * Math.cos(cameraPitch) * cameraDistance,
@@ -3858,7 +3924,7 @@
             Math.cos(cameraYaw) * Math.cos(cameraPitch) * cameraDistance
         );
         camera.position.copy(smoothedCameraFocus).add(camOffset);
-        camera.position.y = Math.max(1.2, camera.position.y);
+        camera.position.y = Math.max(1.4, camera.position.y);
         camera.lookAt(smoothedCameraFocus);
 
         renderer.render(scene, camera);
