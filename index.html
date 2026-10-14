@@ -14,7 +14,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #38bdf8;
+            background-color: #1e293b;
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             user-select: none;
             -webkit-user-select: none;
@@ -57,11 +57,11 @@
         }
 
         .hud-glass {
-            background: rgba(15, 23, 42, 0.62);
+            background: rgba(15, 23, 42, 0.72);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.16);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
         }
 
         #crosshair {
@@ -71,7 +71,7 @@
             width: 12px;
             height: 12px;
             transform: translate(-50%, -50%);
-            border: 1.5px solid rgba(255, 255, 255, 0.55);
+            border: 1.5px solid rgba(255, 255, 255, 0.65);
             border-radius: 50%;
             pointer-events: none;
             z-index: 12;
@@ -111,7 +111,6 @@
             accent-color: #facc15;
         }
 
-        /* Virtual Mobile Joystick Styling */
         #joystick-zone {
             touch-action: none;
         }
@@ -167,12 +166,14 @@
                     <span class="text-white/25">•</span>
                     <span id="objective-desc" class="font-medium text-slate-100 text-[10px] sm:text-[11px] truncate">Follow the 3D Arrow!</span>
                 </div>
-                <div class="flex items-center justify-center gap-2 sm:gap-3 mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] font-mono-tech text-slate-200">
+                <div class="flex items-center justify-center gap-2 sm:gap-2.5 mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] font-mono-tech text-slate-200">
                     <span id="target-distance" class="text-cyan-300 font-semibold">🎯 45m</span>
                     <span class="text-white/25">|</span>
                     <span id="japa-distance" class="text-emerald-300 font-semibold">🚐 32m</span>
                     <span class="text-white/25">|</span>
                     <span id="targets-progress" class="text-amber-300 font-bold">🔑 0/3 Keys</span>
+                    <span class="text-white/25">|</span>
+                    <span id="key-shift-timer" class="text-yellow-200 font-semibold" title="Time until uncollected Gold Keys rotate to new spots">🔄 20s</span>
                 </div>
 
                 <!-- Danfo Boarding Progress (Only visible for Thief) -->
@@ -208,10 +209,10 @@
     <!-- Bottom Area: Mobile Dual-Thumb Controls + Compact Stamina Bar -->
     <div class="flex flex-col items-center gap-2 w-full">
 
-        <!-- MOBILE & TABLET DUAL-THUMB OVERLAY (Auto-shown on touch screens or toggled in menu) -->
+        <!-- MOBILE & TABLET DUAL-THUMB OVERLAY -->
         <div id="mobile-controls-wrapper" class="hidden w-full flex justify-between items-end px-1 sm:px-4 pb-1 pointer-events-none">
             <!-- Left Thumb: Virtual Analog Joystick -->
-            <div id="joystick-zone" class="pointer-events-auto relative w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-slate-900/55 border-2 border-white/30 backdrop-blur-md flex items-center justify-center shadow-lg">
+            <div id="joystick-zone" class="pointer-events-auto relative w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-slate-900/65 border-2 border-white/30 backdrop-blur-md flex items-center justify-center shadow-lg">
                 <div class="absolute inset-2.5 rounded-full border border-dashed border-emerald-400/40 pointer-events-none"></div>
                 <span class="absolute top-2 text-[8px] font-extrabold uppercase tracking-widest text-white/60 pointer-events-none">STEER / SPRINT</span>
                 <div id="joystick-knob" class="w-12 h-12 rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 shadow-lg border-2 border-white pointer-events-none"></div>
@@ -219,7 +220,7 @@
 
             <!-- Right Thumb: Ergonomic Action Pad + Instant Camera Recenter -->
             <div class="pointer-events-auto flex flex-col items-end gap-1.5">
-                <button id="btn-touch-cam-reset" class="px-3 py-1.5 rounded-xl bg-slate-900/80 active:bg-slate-800 text-yellow-300 font-bold text-[10px] border border-yellow-400/40 shadow flex items-center gap-1">
+                <button id="btn-touch-cam-reset" class="px-3 py-1.5 rounded-xl bg-slate-900/85 active:bg-slate-800 text-yellow-300 font-bold text-[10px] border border-yellow-400/40 shadow flex items-center gap-1">
                     <span>🎯</span> <span>Center Cam</span>
                 </button>
                 <div class="grid grid-cols-2 gap-2">
@@ -338,7 +339,7 @@
             </button>
         </div>
 
-        <!-- TAB 1: PLAY MATCH (Default Clean View) -->
+        <!-- TAB 1: PLAY MATCH -->
         <div id="menu-tab-play" class="space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button id="btn-police" class="bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 active:scale-98 text-white py-3.5 px-4 rounded-2xl border border-blue-400/40 shadow-lg transition transform hover:-translate-y-0.5">
@@ -439,7 +440,7 @@
 <div id="pause-menu" class="hidden fixed inset-0 z-30 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
     <div class="bg-slate-900 border border-white/15 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
         <h2 class="text-xl font-extrabold text-yellow-400 mb-1">⚙️ GAME PAUSED</h2>
-        <p class="text-xs text-slate-400 mb-4">Adjust camera speed, brightness, or switch teams</p>
+        <p class="text-xs text-slate-400 mb-4">Adjust camera speed, exposure, or switch teams</p>
 
         <!-- Tucked-away Settings Box -->
         <div class="bg-slate-950/90 border border-white/10 rounded-2xl p-3.5 mb-4 space-y-2.5 text-left text-xs">
@@ -450,10 +451,10 @@
             <input id="sens-slider" type="range" min="15" max="120" value="50" class="w-full h-1.5 cursor-pointer">
 
             <div class="flex items-center justify-between pt-1">
-                <span class="text-slate-300 font-medium">☀️ Screen Brightness</span>
-                <span id="bright-value" class="text-amber-300 font-mono-tech font-bold">140%</span>
+                <span class="text-slate-300 font-medium">☀️ Exposure / Contrast</span>
+                <span id="bright-value" class="text-amber-300 font-mono-tech font-bold">112%</span>
             </div>
-            <input id="bright-slider" type="range" min="90" max="200" value="140" class="w-full h-1.5 cursor-pointer">
+            <input id="bright-slider" type="range" min="80" max="165" value="112" class="w-full h-1.5 cursor-pointer">
 
             <div class="grid grid-cols-2 gap-1.5 pt-1">
                 <button id="btn-audio" class="bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-200 text-[10px] font-semibold py-1.5 px-2 rounded-lg transition text-center">
@@ -603,7 +604,7 @@
             <div class="bg-rose-950/40 border border-rose-400/30 rounded-xl p-3">
                 <div class="font-extrabold text-rose-300 mb-1">🏃🏾‍♂️ AS THIEF</div>
                 <p class="text-[11px] text-slate-300 leading-relaxed">
-                    Follow your 3D arrow to grab all <strong>3 Gold Keys</strong> on the rooftops. Once unlocked, enter the <strong>Green Danfo Ring</strong> (Police are blocked outside!) and hold for 1.5s to escape.
+                    Follow your 3D arrow to grab all <strong>3 Gold Keys</strong> (uncollected keys rotate to new spots every 20s!). Once unlocked, enter the <strong>Green Danfo Ring</strong> and hold for 1.5s to escape.
                 </p>
             </div>
             <div class="bg-blue-950/40 border border-blue-400/30 rounded-xl p-3">
@@ -683,7 +684,6 @@
     const CRED_STORAGE_KEY = 'lagos_life_street_cred_rp';
     const STREAK_STORAGE_KEY = 'lagos_life_win_streak';
 
-    // Detect Mobile / Tablet / Touch-capable device
     const IS_TOUCH_DEVICE = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
 
     const STATE = {
@@ -709,13 +709,14 @@
         smokeCooldown: 0,
         throwCooldown: 0,
         japaTimer: 28,
+        keyRotationTimer: 20,
         targetsCollected: 0,
         aiTargetsCollected: 0,
         totalTargetsNeeded: 3,
         autoCam: true,
         showTouchControls: IS_TOUCH_DEVICE,
         mouseSensitivity: 0.0012,
-        exposureLevel: 1.40,
+        exposureLevel: 1.12,
         walletBalance: 15000,
         selectedStake: 1000,
         selectedPayout: 2800,
@@ -731,6 +732,10 @@
         aiThrowCooldown: 2.5,
         aiJumpCooldown: 0,
         aiStuckTimer: 0,
+        aiSteerAngleOffset: 0,
+        aiSteerLockTimer: 0,
+        aiProgressCheckTimer: 0,
+        aiLastGoalDist: 999,
         backupDashCooldown: 1.5,
         backupThrowCooldown: 3.2,
         backupSlowTimer: 0,
@@ -813,7 +818,6 @@
     }
     syncTouchControlsVisibility();
 
-    // Start Menu Tab Switching (Play vs Loadout)
     const tabBtnPlay = document.getElementById('tab-btn-play');
     const tabBtnLoadout = document.getElementById('tab-btn-loadout');
     const menuTabPlay = document.getElementById('menu-tab-play');
@@ -1133,12 +1137,157 @@
     }
 
     // =========================================================================
-    // BRIGHT, SUNNY LAGOS 3D SCENE & TONE-MAPPED RENDERER
+    // PROCEDURAL REALISTIC TEXTURE GENERATOR (Crisp Contrast, Zero Faded Look)
+    // =========================================================================
+    function createLateriteGroundTexture() {
+        const c = document.createElement('canvas');
+        c.width = 256;
+        c.height = 256;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#b9824f';
+        ctx.fillRect(0, 0, 256, 256);
+
+        // Add subtle organic soil/pebble variations and interlocking paver lines
+        for (let i = 0; i < 2400; i++) {
+            const x = Math.random() * 256;
+            const y = Math.random() * 256;
+            const shade = Math.random();
+            ctx.fillStyle = shade < 0.35 ? 'rgba(120, 68, 33, 0.28)' : shade < 0.7 ? 'rgba(217, 160, 102, 0.25)' : 'rgba(71, 43, 21, 0.22)';
+            ctx.fillRect(x, y, 2 + Math.random() * 3, 2 + Math.random() * 3);
+        }
+        ctx.strokeStyle = 'rgba(92, 54, 24, 0.14)';
+        ctx.lineWidth = 1;
+        for (let g = 0; g < 256; g += 32) {
+            ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, 256); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, g); ctx.lineTo(256, g); ctx.stroke();
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(38, 38);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+    }
+
+    function createAsphaltTexture() {
+        const c = document.createElement('canvas');
+        c.width = 256;
+        c.height = 256;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#262b33';
+        ctx.fillRect(0, 0, 256, 256);
+        for (let i = 0; i < 3000; i++) {
+            const x = Math.random() * 256;
+            const y = Math.random() * 256;
+            ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.22)';
+            ctx.fillRect(x, y, 2, 2);
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(16, 16);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+    }
+
+    function createPitchGrassTexture() {
+        const c = document.createElement('canvas');
+        c.width = 256;
+        c.height = 256;
+        const ctx = c.getContext('2d');
+        for (let stripe = 0; stripe < 8; stripe++) {
+            ctx.fillStyle = stripe % 2 === 0 ? '#15803d' : '#16a34a';
+            ctx.fillRect(stripe * 32, 0, 32, 256);
+        }
+        for (let i = 0; i < 1500; i++) {
+            ctx.fillStyle = 'rgba(20, 83, 45, 0.25)';
+            ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 3);
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(4, 3);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+    }
+
+    function createBuildingFacadeTexture(baseHex) {
+        const c = document.createElement('canvas');
+        c.width = 256;
+        c.height = 256;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = baseHex;
+        ctx.fillRect(0, 0, 256, 256);
+
+        // Plaster weathering & horizontal floor bands
+        for (let i = 0; i < 900; i++) {
+            ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.045)' : 'rgba(255,255,255,0.05)';
+            ctx.fillRect(Math.random() * 256, Math.random() * 256, 4, 3);
+        }
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.16)';
+        ctx.fillRect(0, 122, 256, 6);
+        ctx.fillRect(0, 246, 256, 10);
+
+        // Realistic recessed dark-tinted windows with white concrete frames & louvers
+        const winCols = [26, 102, 178];
+        const winRows = [34, 146];
+        winRows.forEach(wy => {
+            winCols.forEach(wx => {
+                // Outer white frame + sill
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(wx - 4, wy - 4, 54, 64);
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(wx - 6, wy + 56, 58, 6);
+
+                // Dark reflective window glass
+                const grad = ctx.createLinearGradient(wx, wy, wx + 46, wy + 56);
+                grad.addColorStop(0, '#0f172a');
+                grad.addColorStop(0.5, '#1e3a5f');
+                grad.addColorStop(1, '#090d16');
+                ctx.fillStyle = grad;
+                ctx.fillRect(wx, wy, 46, 56);
+
+                // Window mullion bars
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillRect(wx + 22, wy, 2, 56);
+                ctx.fillRect(wx, wy + 27, 46, 2);
+            });
+        });
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+    }
+
+    function createCorrugatedRoofTexture(hexColor) {
+        const c = document.createElement('canvas');
+        c.width = 128;
+        c.height = 128;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = hexColor;
+        ctx.fillRect(0, 0, 128, 128);
+        for (let x = 0; x < 128; x += 8) {
+            ctx.fillStyle = 'rgba(0,0,0,0.18)';
+            ctx.fillRect(x, 0, 3, 128);
+            ctx.fillStyle = 'rgba(255,255,255,0.08)';
+            ctx.fillRect(x + 3, 0, 2, 128);
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(3, 3);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+    }
+
+    // =========================================================================
+    // HIGH-CONTRAST REALISTIC 3D SCENE & RENDERER
     // =========================================================================
     const container = document.getElementById('game-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87ceeb);
-    scene.fog = new THREE.FogExp2(0xdbeafe, 0.0028);
+    scene.background = new THREE.Color(0x38bdf8);
+    // Low fog density so colors stay rich and saturated instead of looking milky/faded
+    scene.fog = new THREE.FogExp2(0x93c5fd, 0.0012);
 
     const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 500);
 
@@ -1150,6 +1299,7 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, IS_TOUCH_DEVICE ? 1.5 : 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = STATE.exposureLevel;
         container.appendChild(renderer.domElement);
@@ -1165,16 +1315,16 @@
         }
     }
 
-    // Triple-Layer Tropical Sunlight so Mobile Screens are Bright, Clear & Vibrant
-    const ambientLight = new THREE.AmbientLight(0xfffbeb, 1.35);
+    // Balanced High-Contrast Tropical Sunlight (Crisp highlights + rich natural shadows)
+    const ambientLight = new THREE.AmbientLight(0xfff7ed, 0.65);
     scene.add(ambientLight);
 
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xfde68a, 1.55);
+    const hemiLight = new THREE.HemisphereLight(0x7dd3fc, 0x9a5b32, 1.05);
     hemiLight.position.set(0, 85, 0);
     scene.add(hemiLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfffdf5, 2.15);
-    dirLight.position.set(65, 115, 55);
+    const dirLight = new THREE.DirectionalLight(0xfffbeb, 2.25);
+    dirLight.position.set(70, 115, 60);
     dirLight.castShadow = true;
     dirLight.shadow.camera.top = 120;
     dirLight.shadow.camera.bottom = -120;
@@ -1190,9 +1340,11 @@
 
     const colliders = [];
 
-    function createBox(x, y, z, w, h, d, color, isSolid = true, castShadow = true) {
+    function createBox(x, y, z, w, h, d, colorOrMat, isSolid = true, castShadow = true) {
         const geo = new THREE.BoxGeometry(w, h, d);
-        const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.65, metalness: 0.05 });
+        const mat = (colorOrMat && colorOrMat.isMaterial)
+            ? colorOrMat
+            : new THREE.MeshStandardMaterial({ color: colorOrMat, roughness: 0.72, metalness: 0.06 });
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.set(x, y, z);
         mesh.castShadow = castShadow;
@@ -1211,26 +1363,36 @@
         return mesh;
     }
 
-    // Bright Warm Lagos Sandy-Ochre Ground & Clean Paved Roads
+    // Textured Laterite Earth Ground & Realistic Dark Asphalt Roads with Concrete Curbs
+    const groundTex = createLateriteGroundTexture();
     const groundMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(320, 320),
-        new THREE.MeshStandardMaterial({ color: 0xe2b878, roughness: 0.88 })
+        new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.92, metalness: 0.02 })
     );
     groundMesh.rotation.x = -Math.PI / 2;
     groundMesh.receiveShadow = true;
     scene.add(groundMesh);
 
-    createBox(0, 0.03, 0, 240, 0.06, 15, 0x3b4252, false, false);
-    createBox(0, 0.04, 0, 15, 0.06, 240, 0x3b4252, false, false);
+    const asphaltMat = new THREE.MeshStandardMaterial({ map: createAsphaltTexture(), roughness: 0.85, metalness: 0.05 });
+    createBox(0, 0.04, 0, 240, 0.08, 15, asphaltMat, false, false);
+    createBox(0, 0.05, 0, 15, 0.08, 240, asphaltMat, false, false);
+
+    // Raised Concrete Sidewalk Curbs along Main Roads
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.8 });
+    [[-56, 8.1, 96, 0.8], [56, 8.1, 96, 0.8], [-56, -8.1, 96, 0.8], [56, -8.1, 96, 0.8]].forEach(([cx, cz, cw, cd]) => {
+        createBox(cx, 0.14, cz, cw, 0.22, cd, curbMat, false, false);
+        createBox(cz, 0.14, cx, cd, 0.22, cw, curbMat, false, false);
+    });
 
     for (let i = -105; i <= 105; i += 14) {
         if (Math.abs(i) < 12) continue;
-        createBox(i, 0.07, 0, 5, 0.02, 0.35, 0xfde047, false, false);
-        createBox(0, 0.07, i, 0.35, 0.02, 5, 0xfde047, false, false);
+        createBox(i, 0.09, 0, 5, 0.02, 0.35, 0xfacc15, false, false);
+        createBox(0, 0.09, i, 0.35, 0.02, 5, 0xfacc15, false, false);
     }
 
-    // Football Pitch
-    createBox(-42, 0.05, 42, 34, 0.08, 24, 0x22c55e, false, false);
+    // Lush Striped Football Pitch
+    const pitchMat = new THREE.MeshStandardMaterial({ map: createPitchGrassTexture(), roughness: 0.88 });
+    createBox(-42, 0.05, 42, 34, 0.08, 24, pitchMat, false, false);
     createBox(-42, 0.1, 30, 34, 0.03, 0.3, 0xffffff, false, false);
     createBox(-42, 0.1, 54, 34, 0.03, 0.3, 0xffffff, false, false);
     createBox(-59, 0.1, 42, 0.3, 0.03, 24, 0xffffff, false, false);
@@ -1238,38 +1400,42 @@
     createBox(-42, 0.1, 42, 0.25, 0.03, 24, 0xffffff, false, false);
 
     function createGoalpost(x, z) {
-        createBox(x, 2, z - 3.5, 0.3, 4, 0.3, 0xffffff, true);
-        createBox(x, 2, z + 3.5, 0.3, 4, 0.3, 0xffffff, true);
-        createBox(x, 4, z, 0.3, 0.3, 7.3, 0xffffff, false);
+        createBox(x, 2, z - 3.5, 0.3, 4, 0.3, 0xf8fafc, true);
+        createBox(x, 2, z + 3.5, 0.3, 4, 0.3, 0xf8fafc, true);
+        createBox(x, 4, z, 0.3, 0.3, 7.3, 0xf8fafc, false);
     }
     createGoalpost(-57, 42);
     createGoalpost(-27, 42);
 
-    // Market Stalls & Rooftop Bridges
-    const stallColors = [0xf59e0b, 0x3b82f6, 0xef4444, 0x10b981, 0x8b5cf6, 0xec4899];
+    // Market Stalls with Corrugated Canopy Roofs & Rooftop Bridges
+    const stallColors = ['#d97706', '#2563eb', '#dc2626', '#059669', '#7c3aed', '#db2777'];
     const stallPositions = [
         [22, 22], [32, 22], [42, 22],
         [22, 34], [32, 34], [42, 34]
     ];
     stallPositions.forEach(([x, z], idx) => {
-        createBox(x, 0.9, z, 5.2, 1.8, 3.6, 0x92400e, true);
-        createBox(x - 1.3, 2.0, z, 1.2, 0.4, 1.2, 0xef4444, false);
-        createBox(x + 1.1, 2.0, z, 1.2, 0.4, 1.2, 0x22c55e, false);
-        createBox(x, 3.3, z, 6.2, 0.45, 4.6, stallColors[idx % stallColors.length], true);
-        createBox(x - 2.6, 1.65, z - 1.8, 0.2, 3.3, 0.2, 0x78350f, false);
-        createBox(x + 2.6, 1.65, z - 1.8, 0.2, 3.3, 0.2, 0x78350f, false);
-        createBox(x - 2.6, 1.65, z + 1.8, 0.2, 3.3, 0.2, 0x78350f, false);
-        createBox(x + 2.6, 1.65, z + 1.8, 0.2, 3.3, 0.2, 0x78350f, false);
-        createBox(x + 3.4, 0.55, z, 1.5, 1.1, 1.5, 0xb45309, true);
+        const canopyMat = new THREE.MeshStandardMaterial({
+            map: createCorrugatedRoofTexture(stallColors[idx % stallColors.length]),
+            roughness: 0.55
+        });
+        createBox(x, 0.9, z, 5.2, 1.8, 3.6, 0x78350f, true);
+        createBox(x - 1.3, 2.0, z, 1.2, 0.4, 1.2, 0xdc2626, false);
+        createBox(x + 1.1, 2.0, z, 1.2, 0.4, 1.2, 0x16a34a, false);
+        createBox(x, 3.3, z, 6.2, 0.45, 4.6, canopyMat, true);
+        createBox(x - 2.6, 1.65, z - 1.8, 0.22, 3.3, 0.22, 0x451a03, false);
+        createBox(x + 2.6, 1.65, z - 1.8, 0.22, 3.3, 0.22, 0x451a03, false);
+        createBox(x - 2.6, 1.65, z + 1.8, 0.22, 3.3, 0.22, 0x451a03, false);
+        createBox(x + 2.6, 1.65, z + 1.8, 0.22, 3.3, 0.22, 0x451a03, false);
+        createBox(x + 3.4, 0.55, z, 1.5, 1.1, 1.5, 0x92400e, true);
     });
 
-    createBox(27, 3.25, 22, 4.4, 0.25, 1.6, 0xb45309, true);
-    createBox(37, 3.25, 22, 4.4, 0.25, 1.6, 0xb45309, true);
-    createBox(27, 3.25, 34, 4.4, 0.25, 1.6, 0xb45309, true);
-    createBox(37, 3.25, 34, 4.4, 0.25, 1.6, 0xb45309, true);
-    createBox(32, 3.25, 28, 1.8, 0.25, 7.8, 0xb45309, true);
+    createBox(27, 3.25, 22, 4.4, 0.25, 1.6, 0x92400e, true);
+    createBox(37, 3.25, 22, 4.4, 0.25, 1.6, 0x92400e, true);
+    createBox(27, 3.25, 34, 4.4, 0.25, 1.6, 0x92400e, true);
+    createBox(37, 3.25, 34, 4.4, 0.25, 1.6, 0x92400e, true);
+    createBox(32, 3.25, 28, 1.8, 0.25, 7.8, 0x92400e, true);
 
-    // Danfo Buses
+    // Detailed Lagos Danfo Buses with Stepping Bumpers
     function createDanfo(x, z, rotY = 0) {
         const group = new THREE.Group();
         group.position.set(x, 0, z);
@@ -1278,7 +1444,7 @@
 
         const body = new THREE.Mesh(
             new THREE.BoxGeometry(4.6, 2.7, 9.2),
-            new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4, emissive: 0xca8a04, emissiveIntensity: 0.12 })
+            new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.35, metalness: 0.15 })
         );
         body.position.y = 1.75;
         body.castShadow = true;
@@ -1287,27 +1453,27 @@
 
         const stripe = new THREE.Mesh(
             new THREE.BoxGeometry(4.68, 0.45, 9.26),
-            new THREE.MeshStandardMaterial({ color: 0x111827 })
+            new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 })
         );
         stripe.position.y = 1.65;
         group.add(stripe);
 
         const glass = new THREE.Mesh(
             new THREE.BoxGeometry(4.7, 0.85, 8.4),
-            new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.15, metalness: 0.6 })
+            new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.12, metalness: 0.75 })
         );
         glass.position.y = 2.45;
         group.add(glass);
 
         const rack = new THREE.Mesh(
             new THREE.BoxGeometry(3.8, 0.25, 6.2),
-            new THREE.MeshStandardMaterial({ color: 0x475569 })
+            new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.4 })
         );
         rack.position.y = 3.22;
         group.add(rack);
 
         const wheelGeo = new THREE.CylinderGeometry(0.68, 0.68, 0.55, 16);
-        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
         [[-2.25, 0.68, -2.8], [2.25, 0.68, -2.8], [-2.25, 0.68, 2.8], [2.25, 0.68, 2.8]].forEach(([wx, wy, wz]) => {
             const w = new THREE.Mesh(wheelGeo, wheelMat);
             w.rotation.z = Math.PI / 2;
@@ -1325,6 +1491,11 @@
             maxZ: z + bd / 2,
             maxY: 3.15
         });
+
+        // Add a low step-crate next to each Danfo so AI and players can vault onto the roof effortlessly
+        const stepX = isRotated ? x : x + 3.1;
+        const stepZ = isRotated ? z + 3.1 : z;
+        createBox(stepX, 0.75, stepZ, 1.8, 1.5, 1.8, 0x78350f, true);
     }
 
     createDanfo(16, -4, 0);
@@ -1340,7 +1511,7 @@
 
         const cab = new THREE.Mesh(
             new THREE.BoxGeometry(2.3, 1.7, 3.2),
-            new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.45 })
+            new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.4 })
         );
         cab.position.y = 1.1;
         cab.castShadow = true;
@@ -1348,7 +1519,7 @@
 
         const roof = new THREE.Mesh(
             new THREE.BoxGeometry(2.4, 0.2, 3.3),
-            new THREE.MeshStandardMaterial({ color: 0x334155 })
+            new THREE.MeshStandardMaterial({ color: 0x1e293b })
         );
         roof.position.y = 2.05;
         g.add(roof);
@@ -1363,33 +1534,45 @@
     createKeke(-14, -14, 0.4);
     createKeke(14, 15, -0.8);
 
-    // Bright Compound Houses
+    // Realistic Textured Compound Houses with Recessed Windows & Corrugated Roofs
     const buildings = [
-        [-32, -32, 16, 11, 16, 0xfef08a],
-        [-54, -28, 14, 15, 18, 0xfed7aa],
-        [34, -34, 18, 12, 14, 0xbfdbfe],
-        [56, -24, 14, 16, 16, 0xfbcfe8],
-        [-30, -58, 22, 10, 12, 0xd9f99d],
-        [30, 56, 18, 12, 16, 0xfde68a],
-        [56, 40, 14, 14, 18, 0xe9d5ff],
-        [-64, 12, 14, 11, 16, 0xfecdd3]
+        [-32, -32, 16, 11, 16, '#d97706'],
+        [-54, -28, 14, 15, 18, '#b45309'],
+        [34, -34, 18, 12, 14, '#2563eb'],
+        [56, -24, 14, 16, 16, '#be185d'],
+        [-30, -58, 22, 10, 12, '#15803d'],
+        [30, 56, 18, 12, 16, '#ca8a04'],
+        [56, 40, 14, 14, 18, '#6d28d9'],
+        [-64, 12, 14, 11, 16, '#b91c1c']
     ];
 
-    buildings.forEach(([x, z, w, h, d, col]) => {
-        createBox(x, 0.35, z, w + 1.2, 0.7, d + 1.2, 0x64748b, true);
-        createBox(x, h / 2 + 0.35, z, w, h, d, col, true);
-        createBox(x, h + 0.85, z, w + 1.4, 1.0, d + 1.4, 0x9a3412, true);
-        createBox(x + w / 2 + 1.2, 1.2, z, 2.2, 2.4, 2.2, 0x94a3b8, true);
+    const roofMat = new THREE.MeshStandardMaterial({
+        map: createCorrugatedRoofTexture('#7c2d12'),
+        roughness: 0.65,
+        metalness: 0.15
     });
 
-    // Stepping crate near [-32, 3.6, -18] key so both players & AI can vault up smoothly
-    createBox(-32, 1.2, -21.5, 4.5, 2.4, 3.2, 0x94a3b8, true);
+    buildings.forEach(([x, z, w, h, d, hexCol]) => {
+        const facadeMat = new THREE.MeshStandardMaterial({
+            map: createBuildingFacadeTexture(hexCol),
+            roughness: 0.78,
+            metalness: 0.05
+        });
+        createBox(x, 0.35, z, w + 1.2, 0.7, d + 1.2, 0x475569, true);
+        createBox(x, h / 2 + 0.35, z, w, h, d, facadeMat, true);
+        createBox(x, h + 0.85, z, w + 1.4, 1.0, d + 1.4, roofMat, true);
+        createBox(x + w / 2 + 1.2, 1.2, z, 2.2, 2.4, 2.2, 0x64748b, true);
+    });
 
-    // Palm Trees
+    // Stepping crate near [-32, 3.6, -18]
+    createBox(-32, 1.2, -21.5, 4.5, 2.4, 3.2, 0x64748b, true);
+    createBox(-32, 2.4, -18.5, 4.5, 3.4, 3.2, 0x475569, true);
+
+    // Palm Trees & NEPA Street Poles
     function createPalmTree(x, z) {
         const trunk = new THREE.Mesh(
             new THREE.CylinderGeometry(0.32, 0.52, 8.5, 8),
-            new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.85 })
+            new THREE.MeshStandardMaterial({ color: 0x5c2d0c, roughness: 0.9 })
         );
         trunk.position.set(x, 4.25, z);
         trunk.castShadow = true;
@@ -1397,13 +1580,14 @@
 
         for (let i = 0; i < 6; i++) {
             const frond = new THREE.Mesh(
-                new THREE.BoxGeometry(0.7, 0.15, 3.8),
-                new THREE.MeshStandardMaterial({ color: 0x22c55e })
+                new THREE.BoxGeometry(0.75, 0.15, 3.9),
+                new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.75 })
             );
             const angle = (i / 6) * Math.PI * 2;
             frond.position.set(x + Math.sin(angle) * 1.7, 8.3, z + Math.cos(angle) * 1.7);
             frond.rotation.y = angle;
             frond.rotation.x = 0.35;
+            frond.castShadow = true;
             scene.add(frond);
         }
         colliders.push({ minX: x - 0.6, maxX: x + 0.6, minZ: z - 0.6, maxZ: z + 0.6, maxY: 8.5 });
@@ -1413,10 +1597,10 @@
 
     // Perimeter Walls
     const BOUNDARY = 95;
-    createBox(0, 3, -BOUNDARY, 194, 6, 3, 0x94a3b8, true);
-    createBox(0, 3, BOUNDARY, 194, 6, 3, 0x94a3b8, true);
-    createBox(-BOUNDARY, 3, 0, 3, 6, 194, 0x94a3b8, true);
-    createBox(BOUNDARY, 3, 0, 3, 6, 194, 0x94a3b8, true);
+    createBox(0, 3, -BOUNDARY, 194, 6, 3, 0x475569, true);
+    createBox(0, 3, BOUNDARY, 194, 6, 3, 0x475569, true);
+    createBox(-BOUNDARY, 3, 0, 3, 6, 194, 0x475569, true);
+    createBox(BOUNDARY, 3, 0, 3, 6, 194, 0x475569, true);
 
     const bystanders = [];
     const powerups = [];
@@ -1458,7 +1642,7 @@
         for (let i = 0; i < 3; i++) {
             const tyre = new THREE.Mesh(
                 new THREE.TorusGeometry(0.95, 0.32, 10, 20),
-                new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 })
+                new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 })
             );
             tyre.rotation.x = Math.PI / 2;
             tyre.position.y = 0.28 + i * 0.42;
@@ -1480,7 +1664,7 @@
         const g = new THREE.Group();
         const cab = new THREE.Mesh(
             new THREE.BoxGeometry(2.4, 1.8, 3.4),
-            new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4, emissive: 0xca8a04, emissiveIntensity: 0.1 })
+            new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.4 })
         );
         cab.position.y = 1.15;
         cab.castShadow = true;
@@ -1488,7 +1672,7 @@
 
         const roof = new THREE.Mesh(
             new THREE.BoxGeometry(2.5, 0.22, 3.5),
-            new THREE.MeshStandardMaterial({ color: 0x1e293b })
+            new THREE.MeshStandardMaterial({ color: 0x0f172a })
         );
         roof.position.y = 2.15;
         g.add(roof);
@@ -1514,7 +1698,7 @@
 
         const body = new THREE.Mesh(
             new THREE.BoxGeometry(0.75, 0.62, 1.35),
-            new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.65 })
+            new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.65 })
         );
         body.position.y = 0.65;
         body.castShadow = true;
@@ -1522,35 +1706,35 @@
 
         const collar = new THREE.Mesh(
             new THREE.BoxGeometry(0.8, 0.22, 0.22),
-            new THREE.MeshStandardMaterial({ color: 0xef4444 })
+            new THREE.MeshStandardMaterial({ color: 0xdc2626 })
         );
         collar.position.set(0, 0.82, 0.58);
         root.add(collar);
 
         const head = new THREE.Mesh(
             new THREE.BoxGeometry(0.62, 0.56, 0.68),
-            new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.65 })
+            new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.65 })
         );
         head.position.set(0, 1.05, 0.82);
         root.add(head);
 
         const snout = new THREE.Mesh(
             new THREE.BoxGeometry(0.36, 0.28, 0.42),
-            new THREE.MeshStandardMaterial({ color: 0x1e293b })
+            new THREE.MeshStandardMaterial({ color: 0x0f172a })
         );
         snout.position.set(0, 0.96, 1.24);
         root.add(snout);
 
         const tail = new THREE.Mesh(
             new THREE.BoxGeometry(0.16, 0.5, 0.16),
-            new THREE.MeshStandardMaterial({ color: 0x92400e })
+            new THREE.MeshStandardMaterial({ color: 0x78350f })
         );
         tail.position.set(0, 0.95, -0.72);
         tail.rotation.x = -0.5;
         root.add(tail);
 
         const legGeo = new THREE.BoxGeometry(0.2, 0.52, 0.2);
-        const legMat = new THREE.MeshStandardMaterial({ color: 0x92400e });
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
         const legs = [];
         [[-0.24, 0.26, 0.46], [0.24, 0.26, 0.46], [-0.24, 0.26, -0.46], [0.24, 0.26, -0.46]].forEach(([lx, ly, lz]) => {
             const leg = new THREE.Mesh(legGeo, legMat);
@@ -1574,13 +1758,13 @@
     const bingoDog = createBingoDog();
     const galaSnackMesh = new THREE.Mesh(
         new THREE.CylinderGeometry(0.28, 0.28, 0.65, 12),
-        new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.5 })
+        new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.4 })
     );
     galaSnackMesh.rotation.z = Math.PI / 2;
     galaSnackMesh.visible = false;
     scene.add(galaSnackMesh);
 
-    // 🌧️ Tropical Lagos Sun-Shower Rain Particle System (Kept Bright for Mobile Visibility!)
+    // 🌧️ Tropical Lagos Rain Particle System
     const rainCount = 380;
     const rainGeo = new THREE.BufferGeometry();
     const rainPositions = new Float32Array(rainCount * 6);
@@ -1605,10 +1789,10 @@
     [[0, 12], [0, -18], [18, 0], [-20, 0], [0, 34], [-4, -32]].forEach(([px, pz]) => {
         const puddle = new THREE.Mesh(
             new THREE.CircleGeometry(2.8, 20),
-            new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.08, metalness: 0.75, transparent: true, opacity: 0.65 })
+            new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.08, metalness: 0.85, transparent: true, opacity: 0.65 })
         );
         puddle.rotation.x = -Math.PI / 2;
-        puddle.position.set(px, 0.08, pz);
+        puddle.position.set(px, 0.09, pz);
         puddle.visible = false;
         scene.add(puddle);
         puddleMeshes.push(puddle);
@@ -1618,12 +1802,11 @@
         STATE.isRainstorm = active;
         rainSystem.visible = active;
         puddleMeshes.forEach(p => { p.visible = active; });
-        // Keep sky and lighting bright even during tropical rain so mobile screens never look dark
-        scene.background.setHex(active ? 0x60a5fa : 0x87ceeb);
-        scene.fog.color.setHex(active ? 0xbfdbfe : 0xdbeafe);
-        ambientLight.intensity = active ? 1.2 : 1.35;
-        hemiLight.intensity = active ? 1.35 : 1.55;
-        dirLight.intensity = active ? 1.75 : 2.15;
+        scene.background.setHex(active ? 0x2563eb : 0x38bdf8);
+        scene.fog.color.setHex(active ? 0x60a5fa : 0x93c5fd);
+        ambientLight.intensity = active ? 0.58 : 0.65;
+        hemiLight.intensity = active ? 0.95 : 1.05;
+        dirLight.intensity = active ? 1.85 : 2.25;
 
         const wBtn = document.getElementById('btn-weather');
         if (wBtn) {
@@ -1847,7 +2030,7 @@
         grp.position.set(x, y, z);
         const outer = new THREE.Mesh(
             new THREE.CylinderGeometry(1.15, 1.15, 0.18, 20),
-            new THREE.MeshStandardMaterial({ color: 0xef4444 })
+            new THREE.MeshStandardMaterial({ color: 0xdc2626 })
         );
         outer.rotation.x = Math.PI / 2;
         grp.add(outer);
@@ -1861,28 +2044,93 @@
         streetTargets.push({ group: grp, cooldown: 0 });
     });
 
-    // 3 Golden Mission Loot Keys (Strictly for the Thief!)
-    const lootCoords = [
-        [32, 4.4, 28],
-        [-28, 4.2, 4],
-        [-32, 3.6, -18]
+    // =========================================================================
+    // 3 GOLDEN MISSION GEMS / KEYS WITH PERIODIC ROTATION ACROSS 9 SPAWN SPOTS
+    // =========================================================================
+    const KEY_SPAWN_POOL = [
+        { pos: new THREE.Vector3(32, 4.4, 28), label: "Market Canopy Bridge" },
+        { pos: new THREE.Vector3(-28, 4.1, 4), label: "West Danfo Roof" },
+        { pos: new THREE.Vector3(-32, 4.5, -18.5), label: "Compound Terrace" },
+        { pos: new THREE.Vector3(16, 4.1, -4), label: "East Danfo Roof" },
+        { pos: new THREE.Vector3(-42, 1.3, 42), label: "Football Pitch Center" },
+        { pos: new THREE.Vector3(22, 4.4, 22), label: "North Market Stall" },
+        { pos: new THREE.Vector3(4, 4.1, -36), label: "South Danfo Roof" },
+        { pos: new THREE.Vector3(0, 1.3, 22), label: "Main Road Junction" },
+        { pos: new THREE.Vector3(42, 4.4, 34), label: "East Market Stall" }
     ];
-    lootCoords.forEach(([x, y, z]) => {
-        const mesh = new THREE.Mesh(
-            new THREE.OctahedronGeometry(0.85, 0),
-            new THREE.MeshStandardMaterial({ color: 0xfde047, emissive: 0xf59e0b, emissiveIntensity: 0.65, metalness: 0.5, roughness: 0.15 })
+
+    for (let i = 0; i < 3; i++) {
+        const group = new THREE.Group();
+        const gemMesh = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.88, 0),
+            new THREE.MeshStandardMaterial({
+                color: 0xfacc15,
+                emissive: 0xd97706,
+                emissiveIntensity: 0.75,
+                metalness: 0.65,
+                roughness: 0.12
+            })
         );
-        mesh.position.set(x, y, z);
-        scene.add(mesh);
-        missionTargets.push({ mesh, baseY: y, collected: false });
-    });
+        group.add(gemMesh);
+
+        const haloRing = new THREE.Mesh(
+            new THREE.TorusGeometry(1.15, 0.07, 8, 24),
+            new THREE.MeshBasicMaterial({ color: 0xfef08a })
+        );
+        haloRing.rotation.x = Math.PI / 2;
+        group.add(haloRing);
+
+        const spot = KEY_SPAWN_POOL[i];
+        group.position.copy(spot.pos);
+        scene.add(group);
+        missionTargets.push({
+            mesh: group,
+            gemMesh,
+            haloRing,
+            baseY: spot.pos.y,
+            spotIndex: i,
+            collected: false
+        });
+    }
+
+    function rotateUncollectedKeyPositions(announce = true) {
+        const usedIndices = new Set();
+        missionTargets.forEach(t => {
+            if (!t.collected) usedIndices.add(t.spotIndex);
+        });
+
+        let rotatedAny = false;
+        missionTargets.forEach(t => {
+            if (t.collected) return;
+            // Pick a fresh spawn spot from KEY_SPAWN_POOL not currently occupied
+            const candidates = [];
+            for (let idx = 0; idx < KEY_SPAWN_POOL.length; idx++) {
+                if (!usedIndices.has(idx)) candidates.push(idx);
+            }
+            if (candidates.length > 0) {
+                const nextIdx = candidates[Math.floor(Math.random() * candidates.length)];
+                usedIndices.delete(t.spotIndex);
+                usedIndices.add(nextIdx);
+                t.spotIndex = nextIdx;
+                const nextSpot = KEY_SPAWN_POOL[nextIdx];
+                t.mesh.position.copy(nextSpot.pos);
+                t.baseY = nextSpot.pos.y;
+                rotatedAny = true;
+            }
+        });
+
+        STATE.keyRotationTimer = 20;
+        if (rotatedAny && announce && STATE.isRunning) {
+            pushKillfeed("🔄 Gold Keys shifted to new spots!", 'info');
+        }
+    }
 
     function createCharacter(shirtColor, pantsColor, hatColor) {
         const root = new THREE.Group();
 
         const torso = new THREE.Mesh(
             new THREE.BoxGeometry(1.15, 1.45, 0.65),
-            new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.5, emissive: shirtColor, emissiveIntensity: 0.12 })
+            new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.5, emissive: shirtColor, emissiveIntensity: 0.08 })
         );
         torso.position.y = 1.95;
         torso.castShadow = true;
@@ -1890,7 +2138,7 @@
 
         const head = new THREE.Mesh(
             new THREE.BoxGeometry(0.82, 0.82, 0.82),
-            new THREE.MeshStandardMaterial({ color: 0x8d5524, roughness: 0.5 })
+            new THREE.MeshStandardMaterial({ color: 0x7c471e, roughness: 0.55 })
         );
         head.position.y = 3.15;
         head.castShadow = true;
@@ -1928,7 +2176,7 @@
     }
 
     const playerChar = createCharacter(0x2563eb, 0x0f172a, 0x1d4ed8);
-    const aiChar = createCharacter(0xf43f5e, 0x1f2937, 0xbe123c);
+    const aiChar = createCharacter(0xe11d48, 0x1f2937, 0x9f1239);
     const backupCopChar = createCharacter(0x1d4ed8, 0x0f172a, 0xef4444);
     backupCopChar.root.visible = false;
     let aiVelY = 0;
@@ -1941,11 +2189,11 @@
         bystanders.push({ char, phrases, cooldown: 0 });
     }
 
-    createBystander(17, 22, 0xec4899, 0xfacc15, [
+    createBystander(17, 22, 0xdb2777, 0xfacc15, [
         "Mama Put: Watch my pot of Jollof o!",
         "Mama Put: Oya run o! No scatter my market!"
     ]);
-    createBystander(12, -8, 0x16a34a, 0xdc2626, [
+    createBystander(12, -8, 0x15803d, 0xdc2626, [
         "Agbero: Oshodi Underbridge! Enter with your change o!",
         "Agbero: Oya Japa! Danfo dey move!"
     ]);
@@ -1971,20 +2219,20 @@
 
     function applyCharacterColors() {
         const isPlayerPolice = STATE.role === 'police';
-        let playerShirt = isPlayerPolice ? 0x2563eb : 0xf43f5e;
+        let playerShirt = isPlayerPolice ? 0x2563eb : 0xe11d48;
         let playerHat = isPlayerPolice ? 0x1e3a8a : 0x9f1239;
         if (STATE.playerDrip === 'eagles') {
             playerShirt = 0x16a34a;
             playerHat = 0xffffff;
         } else if (STATE.playerDrip === 'agbada') {
-            playerShirt = 0xf59e0b;
+            playerShirt = 0xd97706;
             playerHat = 0x78350f;
         }
         playerChar.torso.material.color.setHex(playerShirt);
         playerChar.torso.material.emissive.setHex(playerShirt);
         playerChar.cap.material.color.setHex(playerHat);
 
-        const aiShirt = isPlayerPolice ? 0xf43f5e : 0x2563eb;
+        const aiShirt = isPlayerPolice ? 0xe11d48 : 0x2563eb;
         aiChar.torso.material.color.setHex(aiShirt);
         aiChar.torso.material.emissive.setHex(aiShirt);
         aiChar.cap.material.color.setHex(isPlayerPolice ? 0x9f1239 : 0x1e3a8a);
@@ -1992,7 +2240,6 @@
     }
 
     const keys = { w: false, a: false, s: false, d: false, shift: false, space: false };
-    // Virtual Mobile Joystick Vector (-1 to 1)
     const joystickInput = { x: 0, y: 0, active: false, isSprinting: false };
 
     const playerVel = new THREE.Vector3();
@@ -2016,7 +2263,6 @@
     }
 
     function snapCameraBehindPlayer() {
-        // Player faces playerChar.root.rotation.y. Camera sits behind player at rotation.y + Math.PI
         const desiredYaw = playerChar.root.rotation.y + Math.PI;
         targetCameraYaw = cameraYaw + normalizeAngleDiff(desiredYaw, cameraYaw);
         targetCameraPitch = 0.30;
@@ -2101,7 +2347,6 @@
         let cd = STATE.hasWaterCooler ? 0.65 : 1.3;
         if (STATE.isRainstorm) cd *= 0.75;
         STATE.throwCooldown = cd;
-        // On mobile, if the player turned the character with the joystick, aim along camera or character direction
         const aimYaw = IS_TOUCH_DEVICE && lookTouchId === null
             ? playerChar.root.rotation.y + Math.PI
             : cameraYaw;
@@ -2148,6 +2393,7 @@
     const targetDistanceEl = document.getElementById('target-distance');
     const japaDistanceEl = document.getElementById('japa-distance');
     const targetsProgressEl = document.getElementById('targets-progress');
+    const keyShiftTimerEl = document.getElementById('key-shift-timer');
     const staminaBar = document.getElementById('stamina-bar');
     const staminaLabel = document.getElementById('stamina-label');
     const dashStatus = document.getElementById('dash-status');
@@ -2190,7 +2436,7 @@
         if (scoreThiefEl) scoreThiefEl.innerText = String(STATE.scoreThief);
         if (targetsProgressEl) {
             const count = STATE.role === 'thief' ? STATE.targetsCollected : STATE.aiTargetsCollected;
-            targetsProgressEl.innerText = `🔑 Thief Keys: ${count}/${STATE.totalTargetsNeeded}`;
+            targetsProgressEl.innerText = `🔑 ${count}/${STATE.totalTargetsNeeded} Keys`;
         }
     }
 
@@ -2217,11 +2463,20 @@
         STATE.aiThrowCooldown = 5.0;
         STATE.backupThrowCooldown = 6.5;
         STATE.aiStuckTimer = 0;
+        STATE.aiSteerAngleOffset = 0;
+        STATE.aiSteerLockTimer = 0;
+        STATE.aiProgressCheckTimer = 0;
+        STATE.aiLastGoalDist = 999;
+        STATE.keyRotationTimer = 20;
         setRainstormActive(STATE.round % 2 === 0);
-        missionTargets.forEach(t => {
+        missionTargets.forEach((t, i) => {
             t.collected = false;
             t.mesh.visible = true;
+            t.spotIndex = i;
+            t.mesh.position.copy(KEY_SPAWN_POOL[i].pos);
+            t.baseY = KEY_SPAWN_POOL[i].pos.y;
         });
+        rotateUncollectedKeyPositions(false);
         currentJapaSpotIndex = (currentJapaSpotIndex + 1) % japaSpots.length;
         japaZoneGroup.position.copy(japaSpots[currentJapaSpotIndex]);
         updateDanfoLockVisuals();
@@ -2261,7 +2516,7 @@
             if (barEl) barEl.style.width = unlocked ? `${pct}%` : `${Math.round((STATE.targetsCollected / STATE.totalTargetsNeeded) * 100)}%`;
             if (statusEl) {
                 if (!unlocked) {
-                    statusEl.innerText = `🔒 Grab 3 Gold Keys on roofs to unlock Danfo`;
+                    statusEl.innerText = `🔒 Grab 3 Gold Keys (Keys shift every 20s!)`;
                     statusEl.className = 'text-rose-300 font-bold';
                 } else if (inSanctuary || STATE.boardingProgress > 0) {
                     statusEl.innerText = `🛡️ SAFE ZONE — Boarding Danfo...`;
@@ -2343,6 +2598,11 @@
                 : 'text-cyan-300 font-semibold';
         }
         if (japaDistanceEl) japaDistanceEl.innerText = `🚐 Bus: ${distJapa}m`;
+        if (keyShiftTimerEl) {
+            keyShiftTimerEl.innerText = isDanfoUnlockedForThief()
+                ? '🔓 OPEN'
+                : `🔄 ${Math.ceil(STATE.keyRotationTimer)}s`;
+        }
 
         // 3D GPS Arrow under player
         gpsGroup.position.set(pPos.x, pPos.y, pPos.z);
@@ -2462,7 +2722,7 @@
             if (roundBadge) roundBadge.innerText = `🚨 WARRANT`;
             if (role === 'thief') {
                 if (objectiveTitle) objectiveTitle.innerText = `🚨 WANTED`;
-                if (objectiveDesc) objectiveDesc.innerText = "Grab 3 Keys on roofs & board the Green Danfo!";
+                if (objectiveDesc) objectiveDesc.innerText = "Grab 3 Keys & board the Green Danfo!";
             } else {
                 if (objectiveTitle) objectiveTitle.innerText = `🚓 OFFICER`;
                 if (objectiveDesc) objectiveDesc.innerText = "Guard the 3 Gold Keys & tackle the Thief!";
@@ -2676,9 +2936,7 @@
     window.addEventListener('contextmenu', (e) => e.preventDefault());
 
     // =========================================================================
-    // RE-ENGINEERED MULTI-TOUCH JOYSTICK + 360° MOBILE CAMERA SYSTEM
-    // Tracks each finger by touch.identifier across the whole window so left-thumb
-    // steering and right-thumb camera orbiting never conflict or drop!
+    // MULTI-TOUCH JOYSTICK + 360° MOBILE CAMERA SYSTEM
     // =========================================================================
     const joystickZone = document.getElementById('joystick-zone');
     const joystickKnob = document.getElementById('joystick-knob');
@@ -2704,7 +2962,7 @@
         const normMagnitude = clampedDist / maxR;
         if (normMagnitude > 0.08) {
             joystickInput.x = knobX / maxR;
-            joystickInput.y = -(knobY / maxR); // Up on screen = +1 forward
+            joystickInput.y = -(knobY / maxR);
             joystickInput.active = true;
             joystickInput.isSprinting = normMagnitude > 0.65;
         } else {
@@ -2729,7 +2987,6 @@
         return Boolean(target.closest('button, input, a, summary, details'));
     }
 
-    // Unified Window Multi-Touch Handler (`passive: false` prevents pinch-zoom/scroll glitches when 2 thumbs are down)
     window.addEventListener('touchstart', (e) => {
         if (!STATE.showTouchControls) {
             STATE.showTouchControls = true;
@@ -2741,7 +2998,6 @@
             const t = e.changedTouches[i];
             const target = t.target;
 
-            // 1. Check if this finger landed on the Left Joystick
             if (joystickTouchId === null && joystickZone && (joystickZone.contains(target) || target === joystickZone)) {
                 e.preventDefault();
                 joystickTouchId = t.identifier;
@@ -2753,12 +3009,10 @@
                 continue;
             }
 
-            // 2. Ignore touches that landed on action/HUD buttons
             if (isInteractiveUIElement(target)) {
                 continue;
             }
 
-            // 3. Otherwise, assign this finger to 360° Camera Look!
             if (lookTouchId === null && t.identifier !== joystickTouchId) {
                 e.preventDefault();
                 lookTouchId = t.identifier;
@@ -2781,7 +3035,6 @@
                 updateJoystickFromCoords(t.clientX, t.clientY);
             } else if (t.identifier === lookTouchId) {
                 handled = true;
-                // Clamp per-frame delta to prevent multi-touch hardware jump spikes
                 const rawDx = t.clientX - lastLookX;
                 const rawDy = t.clientY - lastLookY;
                 lastLookX = t.clientX;
@@ -2792,7 +3045,6 @@
 
                 const touchSens = (STATE.mouseSensitivity / 0.0012) * 0.0068;
                 targetCameraYaw -= dx * touchSens;
-                // Keep mobile pitch within a comfortable chase horizon (0.18 to 0.72 rad)
                 targetCameraPitch = Math.max(0.18, Math.min(0.72, targetCameraPitch + dy * touchSens * 0.65));
                 manualLookGraceTimer = 2.0;
             }
@@ -2817,7 +3069,6 @@
     window.addEventListener('touchend', handleGlobalTouchEnd, { passive: true });
     window.addEventListener('touchcancel', handleGlobalTouchEnd, { passive: true });
 
-    // Mobile Action Buttons (Support instant touchstart so players don't lose a frame)
     function bindMobileActionButton(id, handler) {
         const el = document.getElementById(id);
         if (!el) return;
@@ -3011,7 +3262,7 @@
         });
     });
 
-    // Pause, Audio, Sensitivity, Brightness & Game Over Controls
+    // Pause, Audio, Sensitivity, Exposure & Game Over Controls
     document.getElementById('btn-pause-hud')?.addEventListener('click', () => pauseGame());
     document.getElementById('btn-resume')?.addEventListener('click', () => {
         STATE.isRunning = true;
@@ -3087,6 +3338,50 @@
         }
     }, 1000);
 
+    // Helper: Check if a 2D point is blocked by an unclimbable tall building (> 4.8m high)
+    function isBlockedByTallBuilding(x, z, radius = 1.15) {
+        for (const c of colliders) {
+            if (c.maxY > 4.8) {
+                if (x + radius > c.minX && x - radius < c.maxX &&
+                    z + radius > c.minZ && z - radius < c.maxZ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Helper: Compute an obstacle-free steering vector using multi-angle whisker probes
+    function computeSmartSteeringDir(pos, goalPos, isPrimaryAI = false) {
+        const rawDx = goalPos.x - pos.x;
+        const rawDz = goalPos.z - pos.z;
+        const baseAngle = Math.atan2(rawDx, rawDz);
+
+        if (isPrimaryAI && STATE.aiSteerLockTimer > 0) {
+            const lockedAngle = baseAngle + STATE.aiSteerAngleOffset;
+            return new THREE.Vector3(Math.sin(lockedAngle), 0, Math.cos(lockedAngle));
+        }
+
+        const probeAngles = [0, 0.55, -0.55, 1.05, -1.05, 1.55, -1.55, 2.2, -2.2];
+        for (const offset of probeAngles) {
+            const testAngle = baseAngle + offset;
+            const dirX = Math.sin(testAngle);
+            const dirZ = Math.cos(testAngle);
+
+            const nearBlocked = isBlockedByTallBuilding(pos.x + dirX * 2.2, pos.z + dirZ * 2.2, 1.05);
+            const farBlocked = isBlockedByTallBuilding(pos.x + dirX * 4.5, pos.z + dirZ * 4.5, 1.05);
+
+            if (!nearBlocked && !farBlocked) {
+                if (isPrimaryAI && Math.abs(offset) > 0.1) {
+                    STATE.aiSteerAngleOffset = offset;
+                    STATE.aiSteerLockTimer = 0.55;
+                }
+                return new THREE.Vector3(dirX, 0, dirZ);
+            }
+        }
+        return new THREE.Vector3(Math.sin(baseAngle), 0, Math.cos(baseAngle));
+    }
+
     let lastTime = performance.now();
 
     function animate(now = performance.now()) {
@@ -3108,6 +3403,7 @@
             if (STATE.aiDashCooldown > 0) STATE.aiDashCooldown = Math.max(0, STATE.aiDashCooldown - dt);
             if (STATE.aiThrowCooldown > 0) STATE.aiThrowCooldown = Math.max(0, STATE.aiThrowCooldown - dt);
             if (STATE.aiJumpCooldown > 0) STATE.aiJumpCooldown = Math.max(0, STATE.aiJumpCooldown - dt);
+            if (STATE.aiSteerLockTimer > 0) STATE.aiSteerLockTimer = Math.max(0, STATE.aiSteerLockTimer - dt);
             if (STATE.backupDashCooldown > 0) STATE.backupDashCooldown = Math.max(0, STATE.backupDashCooldown - dt);
             if (STATE.backupThrowCooldown > 0) STATE.backupThrowCooldown = Math.max(0, STATE.backupThrowCooldown - dt);
             if (STATE.backupSlowTimer > 0) STATE.backupSlowTimer = Math.max(0, STATE.backupSlowTimer - dt);
@@ -3127,6 +3423,14 @@
                 }
             }
 
+            // Periodic Gold Key / Gem Location Rotation (Every 20s while Danfo is still locked)
+            if (!STATE.isMultiplayerRoom && !isDanfoUnlockedForThief()) {
+                STATE.keyRotationTimer -= dt;
+                if (STATE.keyRotationTimer <= 0) {
+                    rotateUncollectedKeyPositions(true);
+                }
+            }
+
             if (!isThiefInGreenSanctuary()) {
                 STATE.japaTimer -= dt;
             }
@@ -3142,9 +3446,9 @@
             cameraYaw += (targetCameraYaw - cameraYaw) * Math.min(1, dt * 18);
             cameraPitch += (targetCameraPitch - cameraPitch) * Math.min(1, dt * 18);
 
-            // 2. Player Movement Relative to Camera (Combines Keyboard WASD + Mobile Virtual Joystick)
+            // 2. Player Movement Relative to Camera
             const keyForward = (keys.w ? 1 : 0) - (keys.s ? 1 : 0);
-            const keyRight = (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
+            const keyRight = (keys.d ? 1 : 0) - (keys.a ? 0 : 0) - (keys.a ? 1 : 0);
             const moveForward = joystickInput.active ? joystickInput.y : keyForward;
             const moveRight = joystickInput.active ? joystickInput.x : keyRight;
             const inputMag = Math.min(1, Math.hypot(moveForward, moveRight));
@@ -3176,7 +3480,6 @@
 
             if (STATE.dashActiveTimer <= 0) {
                 if (isMoving) {
-                    // Use the current cameraYaw so pushing Up on the stick ALWAYS runs toward where the camera faces
                     const camForward = new THREE.Vector3(-Math.sin(cameraYaw), 0, -Math.cos(cameraYaw));
                     const camRight = new THREE.Vector3(Math.cos(cameraYaw), 0, -Math.sin(cameraYaw));
                     const wishDir = new THREE.Vector3()
@@ -3192,10 +3495,8 @@
                     const rotDiff = normalizeAngleDiff(targetRot, playerChar.root.rotation.y);
                     playerChar.root.rotation.y += rotDiff * Math.min(1, dt * 15);
 
-                    // Smart Follow-Cam: Only assist-turn the camera when the player is NOT touching the right look area!
                     if (STATE.autoCam && lookTouchId === null && manualLookGraceTimer <= 0) {
                         if (joystickInput.active) {
-                            // Responsive single-thumb steering on mobile when right thumb isn't dragging
                             if (moveForward >= -0.25 && Math.abs(moveRight) > 0.12) {
                                 targetCameraYaw -= moveRight * 1.65 * dt;
                             }
@@ -3405,9 +3706,9 @@
             }
 
             // =========================================================================
-            // UPGRADED AI PARKOUR & ROOFTOP NAVIGATION ENGINE
+            // ANTI-STUCK AI PARKOUR & ROOFTOP NAVIGATION ENGINE
             // =========================================================================
-            function stepPursuerPhysics(charObj, pos, velY, moveDir, speed, desiredY = 0) {
+            function stepPursuerPhysics(charObj, pos, velY, moveDir, speed, goalVec) {
                 pos.x += moveDir.x * speed * dt;
                 pos.z += moveDir.z * speed * dt;
                 velY -= 32 * dt;
@@ -3420,37 +3721,46 @@
                         pos.z + r > c.minZ && pos.z - r < c.maxZ) {
                         if (pos.y >= c.maxY - 0.65 && velY <= 0) {
                             aiSupportY = Math.max(aiSupportY, c.maxY);
-                        } else if (c.maxY <= 4.6 && pos.y < c.maxY) {
-                            if (pos.y + 1.8 >= c.maxY) {
+                        } else if (c.maxY <= 4.7 && pos.y < c.maxY) {
+                            // Climbable market stall, Danfo bus, or terrace crate: smoothly vault onto it!
+                            if (pos.y + 2.2 >= c.maxY) {
                                 pos.y = c.maxY;
                                 velY = Math.max(0, velY);
                                 aiSupportY = Math.max(aiSupportY, c.maxY);
-                            } else if (velY <= 2.0) {
-                                velY = 15.6;
-                                pos.y += 0.25;
+                            } else if (velY <= 2.5) {
+                                velY = 17.5;
+                                pos.y += 0.35;
                             }
                         } else {
+                            // Tall unclimbable building: push out and slide tangentially around the wall
                             const overlapLeft = (pos.x + r) - c.minX;
                             const overlapRight = c.maxX - (pos.x - r);
                             const overlapFront = (pos.z + r) - c.minZ;
                             const overlapBack = c.maxZ - (pos.z - r);
                             const minOverlap = Math.min(overlapLeft, overlapRight, overlapFront, overlapBack);
-                            if (minOverlap === overlapLeft) pos.x = c.minX - r;
-                            else if (minOverlap === overlapRight) pos.x = c.maxX + r;
-                            else if (minOverlap === overlapFront) pos.z = c.minZ - r;
-                            else pos.z = c.maxZ + r;
-
-                            pos.x += -moveDir.z * speed * dt * 0.85;
-                            pos.z += moveDir.x * speed * dt * 0.85;
+                            if (minOverlap === overlapLeft) {
+                                pos.x = c.minX - r - 0.05;
+                                pos.z += (moveDir.z >= 0 ? 1 : -1) * speed * dt * 0.9;
+                            } else if (minOverlap === overlapRight) {
+                                pos.x = c.maxX + r + 0.05;
+                                pos.z += (moveDir.z >= 0 ? 1 : -1) * speed * dt * 0.9;
+                            } else if (minOverlap === overlapFront) {
+                                pos.z = c.minZ - r - 0.05;
+                                pos.x += (moveDir.x >= 0 ? 1 : -1) * speed * dt * 0.9;
+                            } else {
+                                pos.z = c.maxZ + r + 0.05;
+                                pos.x += (moveDir.x >= 0 ? 1 : -1) * speed * dt * 0.9;
+                            }
                         }
                     }
                 }
 
-                if (desiredY > pos.y + 1.1 && pos.y <= aiSupportY + 0.1 && velY <= 0) {
-                    const distToGoalXZ = Math.hypot(aiGoal.x - pos.x, aiGoal.z - pos.z);
-                    if (distToGoalXZ < 6.5 && STATE.aiJumpCooldown <= 0) {
-                        velY = 16.2;
-                        STATE.aiJumpCooldown = 0.65;
+                // High jump when approaching an elevated target (e.g. Gold Key on roof)
+                if (goalVec && goalVec.y > pos.y + 0.9 && pos.y <= aiSupportY + 0.15 && velY <= 0) {
+                    const distToGoalXZ = Math.hypot(goalVec.x - pos.x, goalVec.z - pos.z);
+                    if (distToGoalXZ < 6.8 && STATE.aiJumpCooldown <= 0) {
+                        velY = 17.6;
+                        STATE.aiJumpCooldown = 0.55;
                     }
                 }
 
@@ -3474,15 +3784,18 @@
                 }
                 pos.x = Math.max(-BOUNDARY + 2, Math.min(BOUNDARY - 2, pos.x));
                 pos.z = Math.max(-BOUNDARY + 2, Math.min(BOUNDARY - 2, pos.z));
-                charObj.root.rotation.y = Math.atan2(moveDir.x, moveDir.z);
+
+                const targetYaw = Math.atan2(moveDir.x, moveDir.z);
+                const yawDiff = normalizeAngleDiff(targetYaw, charObj.root.rotation.y);
+                charObj.root.rotation.y += yawDiff * Math.min(1, dt * 12);
                 return velY;
             }
 
             // 3A. Primary AI Opponent Logic (or Live WebSocket Player 2 Sync)
             const aPos = aiChar.root.position;
-            let aiSpeed = STATE.difficulty === 'hard' ? 13.8 : STATE.difficulty === 'normal' ? 12.6 : 11.2;
+            let aiSpeed = STATE.difficulty === 'hard' ? 14.0 : STATE.difficulty === 'normal' ? 12.8 : 11.4;
             if (STATE.role === 'police') {
-                aiSpeed *= 1.12;
+                aiSpeed *= 1.14;
             }
             if (STATE.role === 'thief' && STATE.isWarrantMode) {
                 aiSpeed += Math.min(0.8, 0.2 * STATE.warrantStars);
@@ -3511,7 +3824,6 @@
                     });
                 }
             } else {
-                let desiredGoalY = 0;
                 if (STATE.role === 'police') {
                     let nextKey = null;
                     let bestKeyScore = Infinity;
@@ -3529,46 +3841,54 @@
 
                     if (nextKey) {
                         aiGoal.copy(nextKey.mesh.position);
-                        desiredGoalY = nextKey.mesh.position.y;
                         const distToCop = aPos.distanceTo(pPos);
                         const distToKeyXZ = Math.hypot(aPos.x - aiGoal.x, aPos.z - aiGoal.z);
-                        if (distToCop < 7.5 && distToKeyXZ > 4.5) {
+                        if (distToCop < 7.0 && distToKeyXZ > 5.0) {
                             const awayFromCop = new THREE.Vector3(aPos.x - pPos.x, 0, aPos.z - pPos.z).normalize();
-                            aiGoal.addScaledVector(awayFromCop, 4.0);
+                            aiGoal.addScaledVector(awayFromCop, 3.5);
                         }
                     } else {
                         aiGoal.copy(japaZoneGroup.position);
-                        desiredGoalY = 0;
                     }
                 } else {
                     aiGoal.copy(pPos).addScaledVector(playerVel, 0.22);
-                    desiredGoalY = pPos.y;
                 }
 
+                // Anti-Stuck Progress & Velocity Recovery Check
                 const movedXZ = Math.hypot(aPos.x - aiPrevPos.x, aPos.z - aiPrevPos.z);
                 aiPrevPos.copy(aPos);
-                if (movedXZ < aiSpeed * dt * 0.18) {
+                const curGoalDist = Math.hypot(aiGoal.x - aPos.x, aiGoal.z - aPos.z);
+
+                STATE.aiProgressCheckTimer += dt;
+                if (STATE.aiProgressCheckTimer >= 1.1) {
+                    if (Math.abs(STATE.aiLastGoalDist - curGoalDist) < 1.2 && curGoalDist > 3.0) {
+                        // AI hasn't made progress toward its goal: pick a wide flank angle and vault!
+                        STATE.aiSteerAngleOffset = (Math.random() < 0.5 ? 1 : -1) * (1.15 + Math.random() * 0.5);
+                        STATE.aiSteerLockTimer = 0.95;
+                        if (aiVelY <= 0) aiVelY = 17.5;
+                    }
+                    STATE.aiLastGoalDist = curGoalDist;
+                    STATE.aiProgressCheckTimer = 0;
+                }
+
+                if (movedXZ < aiSpeed * dt * 0.22) {
                     STATE.aiStuckTimer += dt;
-                    if (STATE.aiStuckTimer > 0.42) {
+                    if (STATE.aiStuckTimer > 0.32) {
                         STATE.aiStuckTimer = 0;
-                        if (aiVelY <= 0) aiVelY = 16.0;
-                        const sideAngle = aiChar.root.rotation.y + (Math.random() < 0.5 ? 1.2 : -1.2);
-                        aPos.x += Math.sin(sideAngle) * 1.4;
-                        aPos.z += Math.cos(sideAngle) * 1.4;
+                        if (aiVelY <= 0) aiVelY = 17.5;
+                        STATE.aiSteerAngleOffset = (Math.random() < 0.5 ? 1 : -1) * 1.35;
+                        STATE.aiSteerLockTimer = 0.75;
                     }
                 } else {
                     STATE.aiStuckTimer = Math.max(0, STATE.aiStuckTimer - dt * 0.5);
                 }
 
-                const aiDir = new THREE.Vector3(aiGoal.x - aPos.x, 0, aiGoal.z - aPos.z);
-                if (aiDir.lengthSq() > 0.01) {
-                    aiDir.normalize();
-                    if (STATE.aiDashCooldown <= 0 && STATE.headStartTimer <= 0 && aPos.distanceTo(pPos) < 14) {
-                        STATE.aiDashCooldown = STATE.difficulty === 'hard' ? 6.0 : 7.5;
-                        aiSpeed *= 1.35;
-                    }
-                    aiVelY = stepPursuerPhysics(aiChar, aPos, aiVelY, aiDir, aiSpeed, desiredGoalY);
+                const smartDir = computeSmartSteeringDir(aPos, aiGoal, true);
+                if (STATE.aiDashCooldown <= 0 && STATE.headStartTimer <= 0 && aPos.distanceTo(pPos) < 14) {
+                    STATE.aiDashCooldown = STATE.difficulty === 'hard' ? 6.0 : 7.5;
+                    aiSpeed *= 1.35;
                 }
+                aiVelY = stepPursuerPhysics(aiChar, aPos, aiVelY, smartDir, aiSpeed, aiGoal);
 
                 aiDistToPlayer = aPos.distanceTo(pPos);
                 if (STATE.aiThrowCooldown <= 0 && STATE.headStartTimer <= 0 && !isThiefInGreenSanctuary() && aiDistToPlayer < 22 && aiDistToPlayer > 6) {
@@ -3592,11 +3912,8 @@
                     ? japaZoneGroup.position.clone().lerp(pPos, 0.55)
                     : pPos.clone().add(new THREE.Vector3(playerVel.z * 0.55, 0, -playerVel.x * 0.55));
 
-                const bDir = new THREE.Vector3(interceptTarget.x - bPos.x, 0, interceptTarget.z - bPos.z);
-                if (bDir.lengthSq() > 0.01) {
-                    bDir.normalize();
-                    backupVelY = stepPursuerPhysics(backupCopChar, bPos, backupVelY, bDir, backupSpeed, pPos.y);
-                }
+                const bDir = computeSmartSteeringDir(bPos, interceptTarget, false);
+                backupVelY = stepPursuerPhysics(backupCopChar, bPos, backupVelY, bDir, backupSpeed, interceptTarget);
 
                 backupDistToPlayer = bPos.distanceTo(pPos);
                 if (STATE.backupThrowCooldown <= 0 && STATE.headStartTimer <= 0 && !isThiefInGreenSanctuary() && backupDistToPlayer < 20 && backupDistToPlayer > 7) {
@@ -3714,7 +4031,7 @@
                 }
             }
 
-            // 6. Pickups, Golden Loot (THIEF-ONLY!), Bullseyes & Projectiles
+            // 6. Pickups, Multi-Axis Spinning Golden Gems (THIEF-ONLY!), Bullseyes & Projectiles
             powerups.forEach(p => {
                 if (p.cooldown > 0) {
                     p.cooldown -= dt;
@@ -3736,11 +4053,14 @@
 
             missionTargets.forEach((t, idx) => {
                 if (t.collected) return;
-                t.mesh.rotation.y += 2.5 * dt;
-                t.mesh.position.y = t.baseY + Math.sin(now * 0.005) * 0.22;
+                // Continuous multi-axis 3D gem rotation + orbit ring spin
+                t.gemMesh.rotation.y += 3.2 * dt;
+                t.gemMesh.rotation.x = Math.sin(now * 0.003 + idx) * 0.45;
+                t.haloRing.rotation.z -= 2.4 * dt;
+                t.mesh.position.y = t.baseY + Math.sin(now * 0.005 + idx) * 0.25;
 
                 // RULE 1: ONLY THE THIEF CAN COLLECT GOLD KEYS!
-                if (STATE.role === 'thief' && pPos.distanceTo(t.mesh.position) < 2.35) {
+                if (STATE.role === 'thief' && pPos.distanceTo(t.mesh.position) < 2.45) {
                     sfx.playPowerup();
                     t.collected = true;
                     t.mesh.visible = false;
@@ -3769,12 +4089,17 @@
                     const horizDist = Math.hypot(aPos.x - t.mesh.position.x, aPos.z - t.mesh.position.z);
                     const vertDiff = t.mesh.position.y - aPos.y;
 
-                    if (horizDist < 4.2 && vertDiff > 0.8 && aiVelY <= 0) {
-                        aiVelY = 16.4;
+                    if (horizDist < 5.2 && vertDiff > 0.7 && aiVelY <= 0) {
+                        aiVelY = 17.8;
                         sfx.playJump();
                     }
 
-                    if (horizDist < 2.5 && Math.abs(vertDiff) < 2.4) {
+                    // If AI Thief is right beneath a rooftop key for a moment, vault onto the platform
+                    if (horizDist < 3.2 && Math.abs(vertDiff) < 3.2) {
+                        aPos.y = Math.max(aPos.y, t.baseY - 0.8);
+                    }
+
+                    if (horizDist < 2.75 && Math.abs( t.mesh.position.y - aPos.y ) < 2.8) {
                         sfx.playSiren();
                         t.collected = true;
                         t.mesh.visible = false;
