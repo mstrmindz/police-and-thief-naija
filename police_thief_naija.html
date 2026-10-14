@@ -1,0 +1,3739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Police & Thief: Naija (3D Chase Game)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #090d16;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .font-mono-tech {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        #game-container {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .pointer-events-auto {
+            pointer-events: auto;
+        }
+
+        .hud-glass {
+            background: rgba(10, 15, 28, 0.72);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            transform: translate(-50%, -50%);
+            border: 1.5px solid rgba(255, 255, 255, 0.55);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: transform 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+            z-index: 12;
+        }
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 3px;
+            height: 3px;
+            background: #facc15;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #crosshair.active {
+            transform: translate(-50%, -50%) scale(1.35);
+            border-color: #38bdf8;
+            background-color: rgba(56, 189, 248, 0.2);
+        }
+
+        #panic-vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 8;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            box-shadow: inset 0 0 90px rgba(239, 68, 68, 0.75), inset 0 0 160px rgba(37, 99, 235, 0.55);
+        }
+
+        @keyframes sirenPulse {
+            0%, 100% { box-shadow: inset 0 0 95px rgba(239, 68, 68, 0.85), inset 0 0 40px rgba(239, 68, 68, 0.5); }
+            50% { box-shadow: inset 0 0 95px rgba(37, 99, 235, 0.85), inset 0 0 40px rgba(37, 99, 235, 0.5); }
+        }
+
+        .siren-active {
+            animation: sirenPulse 0.45s infinite ease-in-out;
+        }
+
+        input[type="range"] {
+            accent-color: #facc15;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container"></div>
+<div id="panic-vignette" class="siren-active"></div>
+<div id="crosshair" class="hidden"></div>
+
+<div id="ui-layer" class="hidden flex flex-col justify-between p-2.5 sm:p-4">
+
+    <div class="flex flex-wrap justify-between items-start gap-2 w-full">
+        <!-- Left Column: Match Scoreboard, Lagos Life Wallet & Quick Controls -->
+        <div class="flex flex-col gap-1.5">
+            <div class="hud-glass text-white px-3 py-2 rounded-xl flex items-center gap-3">
+                <div class="flex flex-col pr-2.5 border-r border-white/10">
+                    <span id="round-badge" class="text-[9px] font-bold tracking-wider uppercase text-yellow-400">ROUND 1</span>
+                    <span id="timer-display" class="text-sm sm:text-base font-bold font-mono-tech text-white leading-tight">05:00</span>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-semibold">
+                    <div class="flex items-center gap-1 text-blue-300">
+                        <span>🚓</span>
+                        <span class="text-[11px] uppercase tracking-wide text-slate-300">Pol</span>
+                        <span id="score-police" class="text-white text-sm font-bold font-mono-tech ml-0.5">0</span>
+                    </div>
+                    <div class="h-3 w-[1px] bg-white/15"></div>
+                    <div class="flex items-center gap-1 text-rose-300">
+                        <span>🏃🏾‍♂️</span>
+                        <span class="text-[11px] uppercase tracking-wide text-slate-300">Thf</span>
+                        <span id="score-thief" class="text-white text-sm font-bold font-mono-tech ml-0.5">0</span>
+                    </div>
+                </div>
+                <div class="h-6 w-[1px] bg-white/15"></div>
+                <div class="flex flex-col items-end">
+                    <span class="text-[8px] uppercase tracking-wider font-bold text-emerald-400">Lagos Wallet</span>
+                    <span id="hud-wallet-balance" class="text-xs sm:text-sm font-extrabold font-mono-tech text-emerald-300">₦15,000</span>
+                </div>
+                <div class="h-6 w-[1px] bg-white/15"></div>
+                <div class="flex flex-col items-end">
+                    <span id="hud-rank-badge" class="text-[8px] uppercase tracking-wider font-extrabold text-amber-400">🥉 AREA RUNNER</span>
+                    <div class="flex items-center gap-1.5">
+                        <span id="hud-cred-rp" class="text-xs font-bold font-mono-tech text-white">1,200 RP</span>
+                        <span id="hud-combo-pill" class="bg-orange-500/20 border border-orange-400/50 text-orange-300 text-[10px] font-extrabold font-mono-tech px-1.5 py-0.2 rounded">1.0x 🔥</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- In-Match Street Spend Bar -->
+            <div class="flex flex-wrap gap-1 pointer-events-auto items-center">
+                <button id="btn-buy-zobo" class="hud-glass hover:bg-emerald-500/20 border-emerald-400/40 text-emerald-200 text-[10px] font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1" title="Spend ₦300 for instant 100% Stamina & 6s Turbo Speed">
+                    <span>🥤 [1] Zobo</span> <span class="text-yellow-300 font-mono-tech">₦300</span>
+                </button>
+                <button id="btn-buy-decoy" class="hud-glass hover:bg-amber-500/20 border-amber-400/40 text-amber-200 text-[10px] font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1" title="Spend ₦800 to deploy instant Smoke + slow opponent + clear debuffs">
+                    <span>💨 [2] Settle/Decoy</span> <span class="text-yellow-300 font-mono-tech">₦800</span>
+                </button>
+                <button id="btn-toss-gala" class="hud-glass hover:bg-orange-500/20 border-orange-400/40 text-orange-200 text-[10px] font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1" title="Spend ₦150 to toss Gala/Suya & make Bingo chase your opponent!">
+                    <span>🌭 [G] Toss Gala</span> <span class="text-yellow-300 font-mono-tech">₦150</span>
+                </button>
+            </div>
+
+            <!-- Quick Controls -->
+            <div class="flex flex-wrap gap-1 pointer-events-auto items-center">
+                <button id="btn-audio" class="hud-glass hover:bg-white/10 text-slate-200 text-[10px] font-semibold px-2 py-1 rounded-lg transition flex items-center gap-1">
+                    <span id="audio-icon">🔊</span> <span>SFX</span>
+                </button>
+                <button id="btn-weather" class="hud-glass hover:bg-white/10 text-sky-300 text-[10px] font-semibold px-2 py-1 rounded-lg transition">
+                    ☀️ Weather: Sunny
+                </button>
+                <button id="btn-autocam" class="hud-glass hover:bg-white/10 text-emerald-300 text-[10px] font-semibold px-2 py-1 rounded-lg transition">
+                    🎥 Auto-Cam: ON
+                </button>
+                <button id="btn-pause-hud" class="hud-glass hover:bg-white/10 text-slate-200 text-[10px] font-semibold px-2 py-1 rounded-lg transition">
+                    ⏸️ Pause
+                </button>
+                <span id="hud-net-badge" class="hidden hud-glass text-emerald-300 text-[10px] font-mono-tech font-bold px-2 py-1 rounded-lg border border-emerald-400/40">
+                    🌐 LIVE 2P
+                </span>
+            </div>
+
+            <div class="hud-glass text-white px-2.5 py-1 rounded-lg pointer-events-auto flex items-center gap-2 text-[10px] w-fit">
+                <span class="text-slate-300 font-medium">🖱️ Look:</span>
+                <input id="sens-slider" type="range" min="10" max="100" value="40" class="w-16 h-1 cursor-pointer">
+                <span id="sens-value" class="text-yellow-300 font-mono-tech font-semibold w-7 text-right">40%</span>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center gap-1.5 flex-1 max-w-sm mx-auto">
+            <div class="hud-glass text-white px-3 py-0.5 rounded-full flex items-center gap-2 text-[10px] font-mono-tech tracking-wider">
+                <span class="text-yellow-400">🧭</span>
+                <span id="compass-tape" class="font-medium text-slate-300">NW | N | NE</span>
+                <span id="compass-deg" class="text-yellow-300 font-bold">0° N</span>
+            </div>
+
+            <div class="hud-glass text-white px-3.5 py-1.5 rounded-xl text-center w-full border-t-2 border-t-yellow-400/80">
+                <div class="flex items-center justify-center gap-1.5">
+                    <span id="objective-title" class="text-[10px] font-bold uppercase tracking-wider text-yellow-300">OBJECTIVE</span>
+                    <span class="text-white/30">•</span>
+                    <span id="objective-desc" class="text-[11px] font-medium text-slate-200 truncate">Follow the 3D Arrow to catch the Thief!</span>
+                </div>
+                <div class="flex flex-wrap items-center justify-center gap-2.5 mt-0.5 text-[10px] font-mono-tech">
+                    <span id="target-distance" class="text-cyan-300 font-semibold">🎯 Opp: 45m</span>
+                    <span id="japa-distance" class="text-emerald-300 font-semibold">🚐 Danfo: 32m</span>
+                    <span id="targets-progress" class="text-amber-300 font-semibold bg-amber-500/15 px-1.5 py-0.2 rounded border border-amber-400/30">🎯 Loot: 0/3</span>
+                </div>
+                <div id="bounty-banner" class="mt-1 pt-1 border-t border-white/10 flex items-center justify-between text-[10px] font-mono-tech">
+                    <span id="bounty-desc" class="text-cyan-200 font-semibold truncate">📋 Street Bounty: Bounce on 2 Vulcanizer Tyres (0/2)</span>
+                    <span class="text-emerald-300 font-extrabold ml-2">+₦750</span>
+                </div>
+                <div id="danfo-lock-banner" class="hidden mt-1.5 pt-1 border-t border-white/10">
+                    <div class="flex items-center justify-between text-[10px] font-mono-tech font-bold">
+                        <span id="danfo-lock-status" class="text-rose-400">🔒 DANFO LOCKED: Grab 3/3 Gold Keys to Open!</span>
+                        <span id="danfo-board-pct" class="text-yellow-300">0%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden mt-0.5 border border-white/10">
+                        <div id="danfo-board-bar" class="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 transition-all duration-75" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="message-center" class="transition-all duration-200 opacity-0 -translate-y-2 scale-95 pointer-events-none w-full max-w-xs sm:max-w-sm">
+                <div class="hud-glass px-3.5 py-2 rounded-xl border-l-4 border-l-yellow-400 text-center">
+                    <div id="message-text" class="text-xs sm:text-sm font-bold tracking-wide text-yellow-300 leading-snug">
+                        I DON CATCH YOU!
+                    </div>
+                    <div id="message-sub" class="text-[10px] font-medium text-slate-300 mt-0.5">
+                        +1 Point!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: 360° Minimap Radar & Action Feed -->
+        <div class="flex flex-col items-end gap-1">
+            <div class="relative hud-glass p-1 rounded-full border border-yellow-400/50">
+                <canvas id="minimap" width="96" height="96" class="rounded-full block"></canvas>
+                <div class="absolute -top-1 left-1/2 -translate-x-1/2 bg-yellow-400 text-slate-950 text-[8px] font-extrabold px-1.5 rounded-full">FOV</div>
+            </div>
+            <div class="text-[9px] text-slate-300 hud-glass px-2 py-0.5 rounded-full font-medium">
+                🔵 Pol &nbsp; 🔴 Thf &nbsp; 🟢 Bus &nbsp; 💎 Loot
+            </div>
+            <div id="killfeed-container" class="flex flex-col items-end gap-1 mt-1 w-48 pointer-events-none"></div>
+        </div>
+    </div>
+
+    <!-- Bottom HUD: Stamina, Abilities & Controls -->
+    <div class="flex flex-col items-center gap-1.5 w-full">
+        <div id="target-lock-banner" class="hidden bg-rose-600/90 text-white text-[10px] font-bold px-3 py-0.5 rounded-full border border-yellow-300/60 shadow uppercase tracking-wider">
+            🎯 Target in sights — Press [F] to splash Pure Water
+        </div>
+
+        <div class="flex sm:hidden flex-wrap justify-center gap-1.5 pointer-events-auto mb-0.5">
+            <button id="btn-touch-jump" class="bg-yellow-500/90 active:bg-yellow-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg shadow text-[11px]">⬆️ Jump</button>
+            <button id="btn-touch-sprint" class="bg-emerald-600/90 active:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg shadow text-[11px]">⚡ Dash</button>
+            <button id="btn-touch-throw" class="bg-cyan-600/90 active:bg-cyan-500 text-white font-bold px-3 py-1.5 rounded-lg shadow text-[11px]">💧 Water</button>
+            <button id="btn-touch-smoke" class="bg-purple-600/90 active:bg-purple-500 text-white font-bold px-3 py-1.5 rounded-lg shadow text-[11px]">💨 Smoke</button>
+        </div>
+
+        <div class="hud-glass text-white px-3.5 py-2 rounded-xl w-full max-w-lg">
+            <div class="flex flex-col sm:flex-row gap-2.5 items-center">
+                <div class="w-full sm:w-44">
+                    <div class="flex justify-between text-[10px] font-semibold mb-1">
+                        <span class="text-emerald-400 flex items-center gap-1">⚡ ZOBO STAMINA</span>
+                        <span id="stamina-label" class="text-slate-300 font-mono-tech">100%</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-800/90 rounded-full overflow-hidden border border-white/10">
+                        <div id="stamina-bar" class="h-full bg-gradient-to-r from-emerald-500 via-lime-400 to-yellow-400 transition-all duration-75" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div class="w-full sm:flex-1 flex gap-1.5 justify-end">
+                    <div id="badge-dash" class="flex-1 bg-blue-950/60 border border-blue-400/30 rounded-lg px-2 py-1 text-center">
+                        <div class="text-[9px] text-blue-300 font-semibold uppercase">Dash [E]</div>
+                        <div id="dash-status" class="text-[11px] font-bold font-mono-tech text-white">READY</div>
+                    </div>
+                    <div id="badge-throw" class="flex-1 bg-cyan-950/60 border border-cyan-400/30 rounded-lg px-2 py-1 text-center">
+                        <div class="text-[9px] text-cyan-300 font-semibold uppercase">Water [F]</div>
+                        <div id="throw-status" class="text-[11px] font-bold font-mono-tech text-white">READY</div>
+                    </div>
+                    <div id="badge-smoke" class="flex-1 bg-purple-950/60 border border-purple-400/30 rounded-lg px-2 py-1 text-center">
+                        <div class="text-[9px] text-purple-300 font-semibold uppercase">Smoke [Q]</div>
+                        <div id="smoke-status" class="text-[11px] font-bold font-mono-tech text-white">READY</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center border-t border-white/10 mt-1.5 pt-1 flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-[10px] text-slate-400">
+                <span><strong class="text-slate-200">WASD</strong> Move</span>
+                <span><strong class="text-slate-200">Mouse</strong> Look</span>
+                <span><strong class="text-slate-200">Shift</strong> Sprint</span>
+                <span><strong class="text-slate-200">Space</strong> Jump/Vault</span>
+                <span><strong class="text-yellow-300">L-Click/E</strong> Dash</span>
+                <span><strong class="text-cyan-300">F</strong> Pure Water</span>
+                <span><strong class="text-orange-300">[G]</strong> Gala for Bingo (₦150)</span>
+                <span><strong class="text-emerald-300">[1]</strong> Zobo (₦300)</span>
+                <span><strong class="text-amber-300">[2]</strong> Decoy (₦800)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="start-menu" class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900/95 border border-white/15 rounded-2xl p-4 sm:p-6 max-w-xl w-full text-center shadow-2xl my-auto">
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/90 border border-emerald-500/30 rounded-xl px-3.5 py-2 mb-3">
+            <div class="flex items-center gap-2 text-left">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <div>
+                    <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Lagos Life Sim Wallet</div>
+                    <div id="menu-wallet-balance" class="text-sm sm:text-base font-extrabold font-mono-tech text-emerald-400">₦15,000</div>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+                <button id="btn-open-multiplayer" class="bg-indigo-500/25 hover:bg-indigo-500/35 border border-indigo-400/60 text-indigo-200 text-[10px] font-extrabold px-2.5 py-1 rounded-lg transition">
+                    🌐 Live Room Code (2P)
+                </button>
+                <button id="btn-sim-police-report" class="bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/50 text-rose-300 text-[10px] font-extrabold px-2.5 py-1 rounded-lg transition animate-pulse" title="Simulate getting reported to a Lagos Life Police Station">
+                    🚨 Trigger Police Report
+                </button>
+                <button id="btn-sim-topup" class="bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 text-[10px] font-bold px-2.5 py-1 rounded-lg transition" title="Simulate earning Naira in Lagos Life Sim">
+                    +₦5,000
+                </button>
+                <button id="btn-open-leaderboard" class="bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-lg transition">
+                    🏆 Ladder
+                </button>
+                <button id="btn-open-howto" class="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-300 text-[10px] font-bold px-2.5 py-1 rounded-lg transition">
+                    📖 How to Play
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-amber-500/10 via-slate-900 to-amber-500/10 border border-amber-400/30 rounded-xl px-3.5 py-2 mb-2.5 flex items-center justify-between text-left">
+            <div>
+                <div class="text-[9px] font-bold uppercase tracking-wider text-amber-400">Competitive Street Rank</div>
+                <div class="flex items-center gap-2">
+                    <span id="menu-rank-title" class="text-xs sm:text-sm font-extrabold text-white">🥉 Area Runner</span>
+                    <span id="menu-rank-rp" class="text-xs font-mono-tech font-bold text-amber-300">1,200 RP</span>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Win Streak</div>
+                <div id="menu-win-streak" class="text-xs sm:text-sm font-extrabold font-mono-tech text-orange-400">🔥 0 Wins</div>
+            </div>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-yellow-300 to-emerald-400 tracking-tight">
+            POLICE & THIEF: NAIJA
+        </h1>
+        <p class="text-slate-400 font-medium text-xs mt-0.5">
+            Spend your Lagos Life Naira on Street Stakes, Gear Upgrades & Mid-Chase Boosts!
+        </p>
+
+        <!-- 1. Match Entry Stake -->
+        <div class="mt-3 bg-slate-950/70 p-3 rounded-xl border border-white/10 text-left">
+            <div class="flex justify-between items-center mb-1.5">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-yellow-400">1. Choose Compound Entry Stake (Wager)</span>
+                <span id="stake-payout-label" class="text-[10px] font-mono-tech text-emerald-300 font-semibold">Win Payout: ₦2,800</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5">
+                <button data-stake="0" data-payout="500" class="stake-btn py-1.5 px-2 rounded-lg text-[11px] font-semibold bg-slate-900 text-slate-300 border border-white/10 hover:border-white/30 transition">
+                    <div>Street Free</div>
+                    <div class="text-[10px] font-mono-tech text-slate-400">Entry: ₦0</div>
+                </button>
+                <button data-stake="1000" data-payout="2800" class="stake-btn py-1.5 px-2 rounded-lg text-[11px] font-bold bg-yellow-400 text-slate-950 shadow border border-yellow-300 transition">
+                    <div>Area Boy Stake</div>
+                    <div class="text-[10px] font-mono-tech text-slate-900">Entry: ₦1,000</div>
+                </button>
+                <button data-stake="5000" data-payout="14000" class="stake-btn py-1.5 px-2 rounded-lg text-[11px] font-semibold bg-slate-900 text-slate-300 border border-white/10 hover:border-white/30 transition">
+                    <div>Oga High Roller</div>
+                    <div class="text-[10px] font-mono-tech text-amber-300">Entry: ₦5,000</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. Balogun Market Gear Shop -->
+        <div class="mt-2.5 bg-slate-950/70 p-3 rounded-xl border border-white/10 text-left">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-cyan-300 mb-1.5">
+                2. Balogun Street Loadout Shop (1-Match Upgrades)
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button id="shop-sneakers" class="flex items-center justify-between bg-slate-900 hover:bg-slate-800/90 border border-white/10 rounded-lg p-2 transition text-left">
+                    <div>
+                        <div class="text-xs font-bold text-white">👟 Balogun Sneakers</div>
+                        <div class="text-[10px] text-slate-400">+18% Run Speed & Higher Jump</div>
+                    </div>
+                    <span id="shop-sneakers-badge" class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-mono-tech text-[11px] font-bold px-2 py-0.5 rounded">
+                        ₦1,500
+                    </span>
+                </button>
+                <button id="shop-cooler" class="flex items-center justify-between bg-slate-900 hover:bg-slate-800/90 border border-white/10 rounded-lg p-2 transition text-left">
+                    <div>
+                        <div class="text-xs font-bold text-white">💧 Pure Water Cooler</div>
+                        <div class="text-[10px] text-slate-400">2x Faster Throws & Wider Splash</div>
+                    </div>
+                    <span id="shop-cooler-badge" class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-mono-tech text-[11px] font-bold px-2 py-0.5 rounded">
+                        ₦1,200
+                    </span>
+                </button>
+            </div>
+            <div class="mt-2 pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-1.5">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-300">👕 Street Drip:</span>
+                <div class="inline-flex bg-slate-900 p-0.5 rounded-lg border border-white/10 gap-1">
+                    <button data-drip="classic" class="drip-btn px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-400 text-slate-950 transition">Classic</button>
+                    <button data-drip="eagles" class="drip-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition">🦅 Super Eagles '94</button>
+                    <button data-drip="agbada" class="drip-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition">👑 Chief Gold</button>
+                </div>
+            </div>
+            <div id="menu-shop-feedback" class="text-[10px] text-amber-300 font-medium mt-1.5 hidden"></div>
+        </div>
+
+        <!-- Difficulty Selector -->
+        <div class="my-3 flex flex-wrap items-center justify-between gap-2 bg-slate-950/50 px-3 py-2 rounded-xl border border-white/10">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">AI Street Level:</div>
+            <div class="inline-flex bg-slate-950 p-0.5 rounded-lg border border-white/10 gap-1">
+                <button data-diff="easy" class="diff-btn px-2.5 py-1 rounded-md text-[10px] font-semibold text-slate-300 hover:text-white transition">JJC (Easy)</button>
+                <button data-diff="normal" class="diff-btn px-2.5 py-1 rounded-md text-[10px] font-bold bg-yellow-400 text-slate-950 shadow transition">Street Smart</button>
+                <button data-diff="hard" class="diff-btn px-2.5 py-1 rounded-md text-[10px] font-semibold text-slate-300 hover:text-white transition">Agbero Boss</button>
+            </div>
+        </div>
+
+        <!-- Team Selection Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button id="btn-police" class="group bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white py-2.5 px-4 rounded-xl border border-blue-400/50 shadow-lg transition transform hover:-translate-y-0.5">
+                <div class="text-sm sm:text-base font-extrabold mb-0.5">🚓 PLAY AS POLICE</div>
+                <div class="text-[10px] text-blue-200 font-medium">Chase & Tackle the Thief (+₦400/catch)</div>
+            </button>
+            <button id="btn-thief" class="group bg-gradient-to-b from-rose-600 to-rose-800 hover:from-rose-500 hover:to-rose-700 text-white py-2.5 px-4 rounded-xl border border-rose-400/50 shadow-lg transition transform hover:-translate-y-0.5">
+                <div class="text-sm sm:text-base font-extrabold mb-0.5">🏃🏾‍♂️ PLAY AS THIEF</div>
+                <div class="text-[10px] text-rose-200 font-medium">Grab Loot & Japa in the Danfo (+₦450/escape)</div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="pause-menu" class="hidden fixed inset-0 z-30 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="bg-slate-900 border border-white/15 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+        <h2 class="text-xl font-extrabold text-yellow-400 mb-1">⏸️ GAME PAUSED</h2>
+        <p class="text-xs text-slate-400 mb-4">Take a quick breather or switch teams.</p>
+        <div class="flex flex-col gap-2.5">
+            <button id="btn-resume" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold py-2.5 px-4 rounded-xl transition text-sm">
+                ▶️ Resume Chase
+            </button>
+            <button id="btn-open-howto-pause" class="bg-cyan-600/80 hover:bg-cyan-500 text-white font-bold py-2.5 px-4 rounded-xl transition text-xs">
+                📖 How to Play & Controls
+            </button>
+            <button id="btn-switch-role" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-4 rounded-xl transition text-xs">
+                🔄 Switch Role (Police ↔ Thief)
+            </button>
+            <button id="btn-restart-pause" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2.5 px-4 rounded-xl border border-white/10 transition text-xs">
+                🏠 Return to Compound Menu
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="game-over-menu" class="hidden fixed inset-0 z-30 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4">
+    <div class="bg-slate-900 border border-white/15 rounded-2xl p-6 max-w-md w-full text-center shadow-2xl">
+        <div id="gameover-whistle-badge" class="text-xs font-bold uppercase tracking-widest text-yellow-400 mb-1">FULL TIME WHISTLE</div>
+        <h2 id="winner-title" class="text-2xl sm:text-3xl font-extrabold text-white mb-1">🚓 POLICE WINS!</h2>
+        <p id="winner-desc" class="text-xs sm:text-sm text-slate-300 mb-3">Final Score — Police: 0 | Thief: 0</p>
+
+        <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+            <div class="bg-slate-950/90 border border-amber-400/30 rounded-xl p-2">
+                <div class="text-[9px] font-bold uppercase text-slate-400">Street Cred</div>
+                <div id="gameover-rp-delta" class="text-xs sm:text-sm font-extrabold font-mono-tech text-amber-300">+45 RP</div>
+            </div>
+            <div class="bg-slate-950/90 border border-orange-400/30 rounded-xl p-2">
+                <div class="text-[9px] font-bold uppercase text-slate-400">Max Ginger</div>
+                <div id="gameover-max-combo" class="text-xs sm:text-sm font-extrabold font-mono-tech text-orange-300">2.5x 🔥</div>
+            </div>
+            <div class="bg-slate-950/90 border border-cyan-400/30 rounded-xl p-2">
+                <div class="text-[9px] font-bold uppercase text-slate-400">Rank Tier</div>
+                <div id="gameover-rank-tier" class="text-[11px] font-extrabold text-cyan-300 truncate">Area Runner</div>
+            </div>
+        </div>
+
+        <div class="bg-slate-950/90 border border-emerald-500/30 rounded-xl p-3 mb-4 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-400">Updated Lagos Life Wallet:</span>
+            <span id="gameover-wallet-balance" class="text-base font-extrabold font-mono-tech text-emerald-400">₦15,000</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2.5">
+            <button id="btn-restart" class="flex-1 bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-extrabold py-2.5 px-4 rounded-xl transition text-xs sm:text-sm">
+                🔄 Play Again
+            </button>
+            <button id="btn-cashout-sim" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl transition text-xs sm:text-sm">
+                💰 Return to Lagos Life
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Lagos Police Station Dispatch / Wanted Warrant Modal -->
+<div id="police-warrant-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 overflow-y-auto">
+    <div class="bg-slate-900 border-2 border-rose-500/70 rounded-2xl p-5 max-w-lg w-full text-left shadow-2xl my-auto relative overflow-hidden">
+        <div class="flex items-center justify-between bg-gradient-to-r from-rose-600/30 via-slate-900 to-blue-600/30 border border-white/15 rounded-xl px-3.5 py-2 mb-3">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">🚨</span>
+                <div>
+                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-rose-400">Lagos State Police Command — Panti Division</div>
+                    <div id="warrant-stars" class="text-xs font-extrabold text-yellow-400">⭐⭐⭐ WANTED LEVEL 3</div>
+                </div>
+            </div>
+            <button id="btn-close-warrant" class="text-slate-400 hover:text-white text-xs font-bold px-2 py-1 rounded bg-slate-800">✕</button>
+        </div>
+
+        <h3 class="text-lg sm:text-xl font-extrabold text-white mb-1">
+            YOU HAVE BEEN REPORTED TO THE STATION!
+        </h3>
+        <p class="text-xs text-slate-300 mb-3">
+            A citizen or officer in <strong class="text-yellow-300">Lagos Life</strong> filed a report against you. Black Maria is outside the compound! What is your move?
+        </p>
+
+        <div class="bg-slate-950/90 border border-white/10 rounded-xl p-3.5 mb-3 space-y-1.5 text-xs">
+            <div class="flex justify-between">
+                <span class="text-slate-400 font-medium">Reported Offense:</span>
+                <span id="warrant-crime-label" class="font-bold text-rose-300">Oshodi Market Commotion & Unpaid Danfo Fare</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400 font-medium">Station Bail / Fine at Risk:</span>
+                <span id="warrant-bail-label" class="font-extrabold font-mono-tech text-amber-300">₦4,500</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400 font-medium">Escape Reward (Clear Record):</span>
+                <span class="font-extrabold font-mono-tech text-emerald-400">₦0 Fine + ₦2,000 Street Bonus + 60 RP</span>
+            </div>
+        </div>
+
+        <div id="warrant-feedback" class="hidden text-xs font-bold text-amber-300 bg-amber-500/15 border border-amber-400/40 rounded-lg px-3 py-2 mb-3"></div>
+
+        <div class="space-y-2">
+            <button id="btn-warrant-japa" class="w-full bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-extrabold py-2.5 px-4 rounded-xl shadow-lg transition flex items-center justify-between text-xs sm:text-sm">
+                <span>🏃🏾‍♂️ 1. RUN FOR YOUR LIFE! (90s Escape Chase)</span>
+                <span class="bg-black/30 px-2 py-0.5 rounded text-[10px] font-mono-tech">3 Keys + 2 Cops!</span>
+            </button>
+
+            <button id="btn-warrant-settle" class="w-full bg-slate-800 hover:bg-slate-700 border border-emerald-400/40 text-emerald-300 font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-between text-xs">
+                <span>💸 2. "Settle Officer" Quietly at Checkpoint</span>
+                <span id="warrant-bribe-label" class="font-mono-tech font-extrabold text-yellow-300">Pay ₦1,800 (65% Success)</span>
+            </button>
+
+            <button id="btn-warrant-bounty-cop" class="w-full bg-blue-950/80 hover:bg-blue-900/80 border border-blue-400/40 text-blue-200 font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-between text-xs">
+                <span>🚓 3. Police Station Bounty Job (Play as Officer)</span>
+                <span class="font-mono-tech font-extrabold text-emerald-300">Arrest Suspect: +₦3,500</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Competitive Lagos Leaderboard Modal -->
+<div id="leaderboard-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
+    <div class="bg-slate-900 border border-amber-400/40 rounded-2xl p-5 max-w-md w-full text-left shadow-2xl">
+        <div class="flex justify-between items-center mb-3">
+            <div>
+                <h3 class="text-base font-extrabold text-amber-300">🏆 Lagos Street Ranked Ladder</h3>
+                <p class="text-[11px] text-slate-400">Win matches, hit bullseyes & build Ginger Combos to climb!</p>
+            </div>
+            <button id="btn-close-leaderboard" class="text-slate-400 hover:text-white text-xs font-bold px-2.5 py-1 rounded bg-slate-800">✕</button>
+        </div>
+        <div id="leaderboard-rows" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
+        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center text-[11px] text-slate-400">
+            <span>Tiers: JJC (0) • Runner (1k) • Agbero (1.4k) • Oga (1.8k) • Legend (2.2k+)</span>
+        </div>
+    </div>
+</div>
+
+<!-- How to Play Modal -->
+<div id="howto-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-cyan-400/40 rounded-2xl p-5 max-w-xl w-full text-left shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-3">
+            <div>
+                <h3 class="text-base sm:text-lg font-extrabold text-cyan-300">📖 How to Play — Police & Thief: Naija</h3>
+                <p class="text-[11px] text-slate-400">Master street parkour, Pure Water splashes & Danfo escapes!</p>
+            </div>
+            <button id="btn-close-howto" class="text-slate-400 hover:text-white text-xs font-bold px-2.5 py-1 rounded bg-slate-800">✕</button>
+        </div>
+
+        <!-- 1. Role Objectives -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+            <div class="bg-rose-950/40 border border-rose-400/30 rounded-xl p-3">
+                <div class="text-xs font-extrabold text-rose-300 mb-1">🏃🏾‍♂️ PLAYING AS THIEF</div>
+                <ul class="text-[11px] text-slate-300 space-y-1 leading-relaxed">
+                    <li>• <strong>Unlock the Danfo:</strong> The yellow Danfo bus starts <span class="text-rose-400 font-bold">LOCKED</span>. Follow your 3D GPS arrow to climb rooftops and grab all <strong>3 Gold Keys (0/3)</strong>.</li>
+                    <li>• <strong>Safe Green Bus Sanctuary:</strong> Once unlocked (Green Ring), step inside! The <strong>Agbero blocks Police from entering the Green Ring</strong> while you hold for <strong>1.5 seconds</strong> to escape!</li>
+                    <li>• <strong>Slip Tackles:</strong> Keep Stamina above <strong>38%</strong> or Dash (<span class="text-yellow-300 font-mono-tech">[E]</span>) right as an officer touches you on the street to break free!</li>
+                </ul>
+            </div>
+            <div class="bg-blue-950/40 border border-blue-400/30 rounded-xl p-3">
+                <div class="text-xs font-extrabold text-blue-300 mb-1">🚓 PLAYING AS POLICE</div>
+                <ul class="text-[11px] text-slate-300 space-y-1 leading-relaxed">
+                    <li>• <strong>Hunt & Tackle:</strong> Follow your 3D GPS arrow and radar to close the distance and collide with the Thief to make an arrest.</li>
+                    <li>• <strong>Intercept Before the Green Ring:</strong> Patrol around the Gold Keys and cut off the Thief <em>before</em> they step inside the unlocked Green Danfo Sanctuary!</li>
+                    <li>• <strong>Slow Suspects:</strong> Aim and press <span class="text-cyan-300 font-mono-tech">[F]</span> to splash the Thief with cold Pure Water!</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 2. Controls & Street Abilities -->
+        <div class="bg-slate-950/90 border border-white/10 rounded-xl p-3.5 mb-3">
+            <div class="text-[11px] font-extrabold uppercase tracking-wider text-yellow-400 mb-2">
+                🎮 Controls & Street Abilities
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                <div class="bg-slate-900 p-2 rounded-lg border border-white/5">
+                    <span class="text-white font-bold">WASD / Arrows</span>
+                    <div class="text-[10px] text-slate-400">Run & Strafe</div>
+                </div>
+                <div class="bg-slate-900 p-2 rounded-lg border border-white/5">
+                    <span class="text-white font-bold">Mouse / Touch</span>
+                    <div class="text-[10px] text-slate-400">360° Camera Steering</div>
+                </div>
+                <div class="bg-slate-900 p-2 rounded-lg border border-white/5">
+                    <span class="text-emerald-300 font-bold">Shift + Space</span>
+                    <div class="text-[10px] text-slate-400">Sprint & Auto-Vault Roofs</div>
+                </div>
+                <div class="bg-slate-900 p-2 rounded-lg border border-white/5">
+                    <span class="text-yellow-300 font-bold">L-Click or [E]</span>
+                    <div class="text-[10px] text-slate-400">Street Dash / Clear Slow</div>
+                </div>
+                <div class="bg-slate-900 p-2 rounded-lg border border-white/5">
+                    <span class="text-cyan-300 font-bold">Press [F]</span>
+                    <div class="text-[10px] text-slate-400">Throw Pure Water Sachet</div>
+                </div>
+                <div class="bg-slate-900 p-2 rounded-lg border border-white/5">
+                    <span class="text-purple-300 font-bold">R-Click or [Q]</span>
+                    <div class="text-[10px] text-slate-400">Drop Generator Smoke</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Street Secrets, Combos & Warrant Mode -->
+        <div class="bg-slate-950/90 border border-emerald-500/30 rounded-xl p-3.5 text-[11px] text-slate-300 space-y-1.5">
+            <div class="font-extrabold uppercase tracking-wider text-emerald-400 mb-1">
+                🔥 Street Tips, Power-Ups & Warrant Chases
+            </div>
+            <div>• <strong>🥤 Chilled Zobo & Mid-Chase Shop:</strong> Grab glowing red cups on the street or press <strong class="text-emerald-300">[1] (₦300)</strong> for instant 100% Stamina + Turbo Speed, or <strong class="text-amber-300">[2] (₦800)</strong> for an instant Smoke Decoy.</div>
+            <div>• <strong>🎯 Bullseyes & ⚽ Football Pitch:</strong> Splash the 5 spinning Bullseye targets with <strong class="text-cyan-300">[F]</strong> or kick the football into the goalposts for extra Naira, Turbo Speed, and a higher <strong>Ginger Combo Multiplier (up to 4.0x)</strong>!</div>
+            <div>• <strong>🚨 Police Station Warrant Mode:</strong> Click <em>"Trigger Police Report"</em> on the menu for a 90-second survival chase against 2 MopOl officers where your Lagos Wallet bail is on the line!</div>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+            <button id="btn-close-howto-bottom" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-extrabold px-5 py-2 rounded-xl transition">
+                Oya, Let's Play!
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Live WebSocket Room Code Multiplayer Modal -->
+<div id="multiplayer-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 overflow-y-auto">
+    <div class="bg-slate-900 border-2 border-indigo-400/50 rounded-2xl p-5 max-w-lg w-full text-left shadow-2xl my-auto">
+        <div class="flex justify-between items-center mb-3">
+            <div>
+                <h3 class="text-base sm:text-lg font-extrabold text-indigo-300">🌐 Live WebSocket Room Code Lobby</h3>
+                <p class="text-[11px] text-slate-400">Connect with a friend via WebSocket Server or test instantly across 2 browser tabs!</p>
+            </div>
+            <button id="btn-close-multiplayer" class="text-slate-400 hover:text-white text-xs font-bold px-2.5 py-1 rounded bg-slate-800">✕</button>
+        </div>
+
+        <!-- WebSocket Endpoint Configuration -->
+        <div class="bg-slate-950/90 border border-white/10 rounded-xl p-3 mb-3">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                WebSocket Relay Server URL (Optional — Auto-syncs across browser tabs too)
+            </label>
+            <div class="flex gap-2">
+                <input id="mp-ws-url" type="text" value="ws://localhost:8080" placeholder="ws://localhost:8080 or wss://your-server.com" class="flex-1 bg-slate-900 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs font-mono-tech text-white focus:outline-none focus:border-indigo-400">
+            </div>
+        </div>
+
+        <!-- Create or Join Room Code -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+            <div class="bg-slate-950/90 border border-indigo-400/30 rounded-xl p-3 flex flex-col justify-between">
+                <div>
+                    <div class="text-[10px] font-bold uppercase text-indigo-300 mb-1">1. Host a New Compound Room</div>
+                    <p class="text-[11px] text-slate-400 mb-2">Generate a 4-letter Room Code and play as Host.</p>
+                </div>
+                <button id="btn-mp-create" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-2 px-3 rounded-lg text-xs transition">
+                    🎲 Create Room Code
+                </button>
+            </div>
+
+            <div class="bg-slate-950/90 border border-emerald-400/30 rounded-xl p-3 flex flex-col justify-between">
+                <div>
+                    <div class="text-[10px] font-bold uppercase text-emerald-300 mb-1">2. Join Friend's Room Code</div>
+                    <input id="mp-room-input" type="text" maxlength="6" placeholder="E.g. EKO4" class="w-full bg-slate-900 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs font-mono-tech font-bold uppercase text-yellow-300 mb-2 focus:outline-none focus:border-emerald-400">
+                </div>
+                <button id="btn-mp-join" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold py-2 px-3 rounded-lg text-xs transition">
+                    🔗 Join Room
+                </button>
+            </div>
+        </div>
+
+        <!-- Active Room Status Box -->
+        <div id="mp-lobby-box" class="hidden bg-slate-950 border border-yellow-400/40 rounded-xl p-3.5 mb-3">
+            <div class="flex items-center justify-between mb-2">
+                <div>
+                    <span class="text-[10px] font-bold uppercase text-slate-400">Active Room Code:</span>
+                    <div id="mp-active-code" class="text-xl font-extrabold font-mono-tech text-yellow-300 tracking-widest">EKO4</div>
+                </div>
+                <div class="text-right">
+                    <div id="mp-status-badge" class="text-[11px] font-bold text-amber-300">🟡 Waiting for Player 2...</div>
+                    <div id="mp-transport-label" class="text-[10px] font-mono-tech text-slate-400">Transport: WebSocket + Local Tab Relay</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs bg-slate-900/90 p-2.5 rounded-lg border border-white/10 mb-2.5">
+                <div>
+                    <span class="text-[10px] text-slate-400 block">Host (🚓 Police):</span>
+                    <span id="mp-slot-host" class="font-bold text-blue-300">Connected ✅</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 block">Challenger (🏃🏾‍♂️ Thief):</span>
+                    <span id="mp-slot-guest" class="font-bold text-slate-500">Waiting...</span>
+                </div>
+            </div>
+            <button id="btn-mp-start-match" disabled class="w-full bg-yellow-400 disabled:bg-slate-800 disabled:text-slate-500 hover:bg-yellow-300 text-slate-950 font-extrabold py-2.5 px-4 rounded-xl text-xs transition">
+                ⏳ Waiting for Second Session to Connect...
+            </button>
+        </div>
+
+        <div class="text-[10px] text-slate-400 leading-relaxed bg-slate-950/60 p-2.5 rounded-lg border border-white/5">
+            💡 <strong>Instant Test Tip:</strong> Open this game in <strong>two browser windows side-by-side</strong>, click <em>Create Room Code</em> in Window 1, and enter that 4-letter code in Window 2! Both sessions will lock in and sync live 3D movement, Pure Water throws, and captures.
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+
+    const WALLET_STORAGE_KEY = 'lagos_life_naira_wallet';
+    const CRED_STORAGE_KEY = 'lagos_life_street_cred_rp';
+    const STREAK_STORAGE_KEY = 'lagos_life_win_streak';
+
+    const STATE = {
+        role: 'police',
+        difficulty: 'normal',
+        isRunning: false,
+        isOvertime: false,
+        isWarrantMode: false,
+        warrantCrime: 'Oshodi Market Commotion & Unpaid Danfo Fare',
+        warrantStars: 3,
+        warrantBail: 4500,
+        warrantBribeCost: 1800,
+        round: 1,
+        timeLeft: 300,
+        scorePolice: 0,
+        scoreThief: 0,
+        stamina: 100,
+        speedBoostTimer: 0,
+        playerSlowTimer: 0,
+        aiSlowTimer: 0,
+        dashCooldown: 0,
+        dashActiveTimer: 0,
+        smokeCooldown: 0,
+        throwCooldown: 0,
+        japaTimer: 28,
+        targetsCollected: 0,
+        aiTargetsCollected: 0,
+        totalTargetsNeeded: 3,
+        autoCam: true,
+        mouseSensitivity: 0.0010,
+        walletBalance: 15000,
+        selectedStake: 1000,
+        selectedPayout: 2800,
+        hasBalogunSneakers: false,
+        hasWaterCooler: false,
+        matchEarnings: 0,
+        streetCredRP: 1200,
+        winStreak: 0,
+        comboMultiplier: 1.0,
+        comboTimer: 0,
+        maxMatchCombo: 1.0,
+        aiDashCooldown: 0,
+        aiThrowCooldown: 2.5,
+        backupDashCooldown: 1.5,
+        backupThrowCooldown: 3.2,
+        backupSlowTimer: 0,
+        boardingProgress: 0,
+        heartbeatTimer: 0,
+        roadblockTimer: 16,
+        headStartTimer: 0,
+        tackleBreakCooldown: 0,
+        sanctuaryNoticeCooldown: 0,
+        playerDrip: 'classic',
+        bountyIndex: 0,
+        bountyProgress: 0,
+        isRainstorm: false,
+        bingoSnackTimer: 0,
+        bingoBiteCooldown: 0,
+        isMultiplayerRoom: false,
+        roomCode: '',
+        isRoomHost: false,
+        peerConnected: false,
+        pidginPolice: [
+            "I don catch you! No way to japa!",
+            "Oya enter Black Maria! Station straight!",
+            "You think say you fit outrun MopOl?",
+            "Hold am! Street don lock!",
+            "Hands up! Your leg don tire!"
+        ],
+        pidginThief: [
+            "Omo, I don japa inside Danfo! Catch me if you can!",
+            "My legget dey hot! Bye bye Officer!",
+            "Otilo! You no fit see my brake light!",
+            "Driver, oya move! Police dey my back!",
+            "Street smart pass uniform! Ehen!"
+        ]
+    };
+
+    const RANK_TIERS = [
+        { minRP: 2200, name: "👑 Lagos Legend", short: "👑 LEGEND" },
+        { minRP: 1800, name: "💎 Oga at the Top", short: "💎 OGA TOP" },
+        { minRP: 1400, name: "🥇 Agbero Champion", short: "🥇 AGBERO" },
+        { minRP: 1000, name: "🥉 Area Runner", short: "🥉 RUNNER" },
+        { minRP: 0,    name: "🌱 Street JJC", short: "🌱 JJC" }
+    ];
+
+    const RIVAL_LADDER = [
+        { name: "Oshodi_Tornado", rp: 2340, wallet: 142000 },
+        { name: "Danfo_Ghost99", rp: 1980, wallet: 88500 },
+        { name: "Mopol_Commander", rp: 1710, wallet: 64000 },
+        { name: "SuyaKing_Yaba", rp: 1490, wallet: 49200 },
+        { name: "Balogun_Flash", rp: 1260, wallet: 27500 },
+        { name: "Lekki_Stepper", rp: 1050, wallet: 19000 }
+    ];
+
+    const NAIJA_CRIMES = [
+        { crime: "Driving One-Way on Third Mainland Bridge", bail: 6000, stars: 4 },
+        { crime: "Refusing to Pay Mama Put ₦2,500 Amala Bill", bail: 3500, stars: 2 },
+        { crime: "Oshodi Bus Stop Agbero Commotion", bail: 4500, stars: 3 },
+        { crime: "Running Red Light at Lekki Phase 1 Tollgate", bail: 5000, stars: 3 },
+        { crime: "Illegal Street Generator Noise Complaint", bail: 3000, stars: 2 }
+    ];
+
+    function getRankForRP(rp) {
+        return RANK_TIERS.find(t => rp >= t.minRP) || RANK_TIERS[RANK_TIERS.length - 1];
+    }
+
+    function formatNaira(amount) {
+        return '₦' + Math.max(0, Math.round(amount)).toLocaleString('en-NG');
+    }
+
+    class SoundEngine {
+        constructor() {
+            this.ctx = null;
+            this.enabled = true;
+            this.beatInterval = null;
+            this.stepCount = 0;
+        }
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+            if (!this.beatInterval && this.ctx) {
+                this.beatInterval = setInterval(() => this.playAfroPercussion(), 260);
+            }
+        }
+        playTone(freq, type, duration, vol = 0.08, slideFreq = null) {
+            if (!this.enabled || !this.ctx) return;
+            try {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                if (slideFreq) {
+                    osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + duration);
+                }
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            } catch (e) {}
+        }
+        playJump() { this.playTone(230, 'sine', 0.18, 0.08, 520); }
+        playVault() { this.playTone(300, 'triangle', 0.2, 0.09, 680); }
+        playDash() { this.playTone(160, 'sawtooth', 0.22, 0.08, 90); }
+        playThrow() { this.playTone(420, 'sine', 0.14, 0.07, 740); }
+        playSplash() {
+            this.playTone(620, 'triangle', 0.12, 0.09, 190);
+            setTimeout(() => this.playTone(480, 'sine', 0.15, 0.07, 140), 50);
+        }
+        playPowerup() {
+            this.playTone(440, 'triangle', 0.12, 0.09, 660);
+            setTimeout(() => this.playTone(660, 'triangle', 0.2, 0.1, 880), 90);
+        }
+        playSiren() {
+            this.playTone(600, 'square', 0.25, 0.06, 920);
+            setTimeout(() => this.playTone(920, 'square', 0.25, 0.06, 600), 230);
+        }
+        playHeartbeat(intensity = 1) {
+            const vol = Math.min(0.16, 0.06 * intensity);
+            this.playTone(62, 'sine', 0.09, vol, 38);
+            setTimeout(() => this.playTone(54, 'sine', 0.12, vol * 0.85, 32), 115);
+        }
+        playBark() {
+            this.playTone(195, 'sawtooth', 0.09, 0.11, 110);
+            setTimeout(() => this.playTone(225, 'sawtooth', 0.12, 0.12, 95), 115);
+        }
+        playThunder() {
+            this.playTone(68, 'sawtooth', 0.45, 0.12, 28);
+        }
+        playGoal() {
+            [523, 659, 784, 1046].forEach((f, idx) => {
+                setTimeout(() => this.playTone(f, 'triangle', 0.2, 0.1), idx * 90);
+            });
+        }
+        playAfroPercussion() {
+            if (!this.enabled || !this.ctx || !STATE.isRunning) return;
+            this.stepCount = (this.stepCount + 1) % 8;
+            if (this.stepCount === 0 || this.stepCount === 4) {
+                this.playTone(95, 'sine', 0.09, 0.04, 42);
+            } else if (this.stepCount === 2 || this.stepCount === 5 || this.stepCount === 7) {
+                this.playTone(760, 'triangle', 0.04, 0.02, 420);
+            }
+        }
+    }
+
+    const sfx = new SoundEngine();
+
+    function updateCompetitiveUI() {
+        const tier = getRankForRP(STATE.streetCredRP);
+        const hudRank = document.getElementById('hud-rank-badge');
+        const hudRP = document.getElementById('hud-cred-rp');
+        const hudCombo = document.getElementById('hud-combo-pill');
+        const menuRank = document.getElementById('menu-rank-title');
+        const menuRP = document.getElementById('menu-rank-rp');
+        const menuStreak = document.getElementById('menu-win-streak');
+
+        if (hudRank) hudRank.innerText = tier.short;
+        if (hudRP) hudRP.innerText = `${STATE.streetCredRP.toLocaleString()} RP`;
+        if (hudCombo) hudCombo.innerText = `${STATE.comboMultiplier.toFixed(1)}x 🔥`;
+        if (menuRank) menuRank.innerText = tier.name;
+        if (menuRP) menuRP.innerText = `${STATE.streetCredRP.toLocaleString()} RP`;
+        if (menuStreak) menuStreak.innerText = `🔥 ${STATE.winStreak} Win${STATE.winStreak === 1 ? '' : 's'}`;
+    }
+
+    function updateWalletUI() {
+        const formatted = formatNaira(STATE.walletBalance);
+        const menuEl = document.getElementById('menu-wallet-balance');
+        const hudEl = document.getElementById('hud-wallet-balance');
+        const overEl = document.getElementById('gameover-wallet-balance');
+        if (menuEl) menuEl.innerText = formatted;
+        if (hudEl) hudEl.innerText = formatted;
+        if (overEl) overEl.innerText = formatted;
+    }
+
+    function syncWalletWithLagosLifeSim(deltaAmount = 0, reason = 'update') {
+        try {
+            localStorage.setItem(WALLET_STORAGE_KEY, String(STATE.walletBalance));
+        } catch (e) {}
+        updateWalletUI();
+
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'LAGOS_LIFE_WALLET_UPDATE',
+                game: 'police_and_thief_naija',
+                balance: STATE.walletBalance,
+                delta: deltaAmount,
+                reason
+            }, '*');
+        }
+    }
+
+    const killfeedContainer = document.getElementById('killfeed-container');
+
+    function pushKillfeed(text, tone = 'info') {
+        if (!killfeedContainer) return;
+        const item = document.createElement('div');
+        const borderMap = {
+            good: 'border-emerald-400 text-emerald-200',
+            bad: 'border-rose-400 text-rose-200',
+            combo: 'border-orange-400 text-orange-200',
+            info: 'border-cyan-400 text-cyan-200'
+        };
+        item.className = `hud-glass px-2.5 py-1 rounded-lg border-r-2 ${borderMap[tone] || borderMap.info} text-[10px] font-bold tracking-tight transition-all duration-300 shadow`;
+        item.innerText = text;
+        killfeedContainer.prepend(item);
+        while (killfeedContainer.children.length > 4) {
+            killfeedContainer.lastElementChild.remove();
+        }
+        setTimeout(() => {
+            item.style.opacity = '0';
+            setTimeout(() => item.remove(), 300);
+        }, 3800);
+    }
+
+    function addComboGinger(step = 0.5, label = "Street Move") {
+        STATE.comboMultiplier = Math.min(4.0, +(STATE.comboMultiplier + step).toFixed(1));
+        STATE.comboTimer = 8.5;
+        if (STATE.comboMultiplier > STATE.maxMatchCombo) {
+            STATE.maxMatchCombo = STATE.comboMultiplier;
+        }
+        updateCompetitiveUI();
+        pushKillfeed(`🔥 ${STATE.comboMultiplier.toFixed(1)}x GINGER — ${label}!`, 'combo');
+    }
+
+    function renderLeaderboardModal() {
+        const container = document.getElementById('leaderboard-rows');
+        if (!container) return;
+        const entries = [
+            ...RIVAL_LADDER,
+            { name: "YOU (Lagos Player)", rp: STATE.streetCredRP, wallet: STATE.walletBalance, isPlayer: true }
+        ].sort((a, b) => b.rp - a.rp);
+
+        container.innerHTML = entries.map((r, idx) => {
+            const tier = getRankForRP(r.rp);
+            const highlight = r.isPlayer
+                ? 'bg-yellow-400/15 border-yellow-400 text-yellow-200'
+                : 'bg-slate-950/80 border-white/10 text-slate-200';
+            return `
+                <div class="flex items-center justify-between px-3 py-2 rounded-xl border ${highlight} text-xs">
+                    <div class="flex items-center gap-2.5">
+                        <span class="font-mono-tech font-extrabold text-amber-400 w-5">#${idx + 1}</span>
+                        <div>
+                            <div class="font-extrabold ${r.isPlayer ? 'text-yellow-300' : 'text-white'}">${r.name}</div>
+                            <div class="text-[10px] text-slate-400">${tier.name}</div>
+                        </div>
+                    </div>
+                    <div class="text-right font-mono-tech">
+                        <div class="font-extrabold text-amber-300">${r.rp.toLocaleString()} RP</div>
+                        <div class="text-[10px] text-emerald-400">${formatNaira(r.wallet)}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function openPoliceWarrantModal(crime, bail, stars) {
+        sfx.init();
+        sfx.playSiren();
+        STATE.warrantCrime = crime;
+        STATE.warrantBail = bail;
+        STATE.warrantStars = Math.max(1, Math.min(5, stars));
+        STATE.warrantBribeCost = Math.round(bail * 0.4);
+
+        const starsEl = document.getElementById('warrant-stars');
+        if (starsEl) starsEl.innerText = `${'⭐'.repeat(STATE.warrantStars)} WANTED LEVEL ${STATE.warrantStars}`;
+        const crimeEl = document.getElementById('warrant-crime-label');
+        if (crimeEl) crimeEl.innerText = STATE.warrantCrime;
+        const bailEl = document.getElementById('warrant-bail-label');
+        if (bailEl) bailEl.innerText = formatNaira(STATE.warrantBail);
+        const bribeEl = document.getElementById('warrant-bribe-label');
+        if (bribeEl) bribeEl.innerText = `Pay ${formatNaira(STATE.warrantBribeCost)} (65% Success)`;
+        const fbEl = document.getElementById('warrant-feedback');
+        if (fbEl) fbEl.classList.add('hidden');
+
+        document.getElementById('police-warrant-modal')?.classList.remove('hidden');
+    }
+
+    function sendPoliceVerdictToLagosLife(outcome, details = {}) {
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+                type: 'LAGOS_POLICE_VERDICT',
+                outcome,
+                crime: STATE.warrantCrime,
+                stars: STATE.warrantStars,
+                balance: STATE.walletBalance,
+                ...details
+            }, '*');
+        }
+    }
+
+    function initLagosLifeWallet() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const urlNaira = params.get('naira') || params.get('balance');
+            const saved = localStorage.getItem(WALLET_STORAGE_KEY);
+            if (urlNaira !== null && !isNaN(Number(urlNaira))) {
+                STATE.walletBalance = Math.max(0, Number(urlNaira));
+            } else if (saved !== null && !isNaN(Number(saved))) {
+                STATE.walletBalance = Math.max(0, Number(saved));
+            }
+            const savedRP = localStorage.getItem(CRED_STORAGE_KEY);
+            if (savedRP !== null && !isNaN(Number(savedRP))) {
+                STATE.streetCredRP = Math.max(100, Number(savedRP));
+            }
+            const savedStreak = localStorage.getItem(STREAK_STORAGE_KEY);
+            if (savedStreak !== null && !isNaN(Number(savedStreak))) {
+                STATE.winStreak = Math.max(0, Number(savedStreak));
+            }
+            if (params.get('mode') === 'wanted' || params.get('warrant') === '1') {
+                const crime = params.get('crime') || 'Reported at Lagos Police Station';
+                const bail = Number(params.get('bail')) || 4500;
+                const stars = Number(params.get('stars')) || 3;
+                setTimeout(() => openPoliceWarrantModal(crime, bail, stars), 250);
+            }
+        } catch (e) {}
+        updateWalletUI();
+        updateCompetitiveUI();
+    }
+
+    initLagosLifeWallet();
+
+    window.addEventListener('message', (e) => {
+        if (!e.data || typeof e.data !== 'object') return;
+        if (e.data.type === 'LAGOS_LIFE_SYNC' || e.data.type === 'LAGOS_LIFE_INIT') {
+            if (typeof e.data.balance === 'number') {
+                STATE.walletBalance = Math.max(0, e.data.balance);
+                syncWalletWithLagosLifeSim(0, 'host_sync');
+            }
+        }
+        if (e.data.type === 'LAGOS_POLICE_REPORT') {
+            if (typeof e.data.balance === 'number') {
+                STATE.walletBalance = Math.max(0, e.data.balance);
+                updateWalletUI();
+            }
+            openPoliceWarrantModal(
+                e.data.crime || 'Reported to Area Command Police Station',
+                e.data.bail || 4500,
+                e.data.stars || 3
+            );
+        }
+    });
+
+    function spendLagosNaira(cost, reason) {
+        if (STATE.walletBalance < cost) {
+            if (STATE.isRunning) {
+                showMessage("NO SAPA! INSUFFICIENT NAIRA!", false, `Need ${formatNaira(cost)} in your Lagos Life Wallet`, 'thief');
+            } else {
+                const fb = document.getElementById('menu-shop-feedback');
+                if (fb) {
+                    fb.innerText = `⚠️ Not enough Lagos Life Naira! You need ${formatNaira(cost)} (Click +₦5,000 above to top up).`;
+                    fb.classList.remove('hidden');
+                }
+            }
+            return false;
+        }
+        STATE.walletBalance -= cost;
+        STATE.matchEarnings -= cost;
+        syncWalletWithLagosLifeSim(-cost, reason);
+        return true;
+    }
+
+    function earnLagosNaira(amount, reason) {
+        STATE.walletBalance += amount;
+        STATE.matchEarnings += amount;
+        syncWalletWithLagosLifeSim(amount, reason);
+    }
+
+    const container = document.getElementById('game-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x7dd3fc);
+    scene.fog = new THREE.FogExp2(0xbae6fd, 0.0042);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 600);
+
+    let renderer;
+    let isWebGLAvailable = false;
+    try {
+        renderer = new THREE.WebGLRenderer({ powerPreference: "default", antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+        isWebGLAvailable = true;
+    } catch (e) {
+        console.warn("WebGL fallback triggered:", e);
+        const startMenuEl = document.getElementById('start-menu');
+        if (startMenuEl) {
+            startMenuEl.innerHTML = `<div class="bg-red-900/90 text-white p-8 rounded-2xl max-w-md text-center border-2 border-red-400">
+                <h2 class="text-2xl font-bold mb-2">⚠️ WebGL Required</h2>
+                <p class="text-sm">Please enable hardware acceleration in your browser to play Police & Thief: Naija.</p>
+            </div>`;
+        }
+    }
+
+    const hemiLight = new THREE.HemisphereLight(0xfffbeb, 0x334155, 0.9);
+    hemiLight.position.set(0, 80, 0);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfff7ed, 1.25);
+    dirLight.position.set(65, 110, 55);
+    dirLight.castShadow = true;
+    dirLight.shadow.camera.top = 120;
+    dirLight.shadow.camera.bottom = -120;
+    dirLight.shadow.camera.left = -120;
+    dirLight.shadow.camera.right = 120;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 280;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    scene.add(dirLight);
+
+    const colliders = [];
+
+    function createBox(x, y, z, w, h, d, color, isSolid = true, castShadow = true) {
+        const geo = new THREE.BoxGeometry(w, h, d);
+        const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.75, metalness: 0.08 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, y, z);
+        mesh.castShadow = castShadow;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+
+        if (isSolid) {
+            colliders.push({
+                minX: x - w / 2,
+                maxX: x + w / 2,
+                minZ: z - d / 2,
+                maxZ: z + d / 2,
+                maxY: y + h / 2
+            });
+        }
+        return mesh;
+    }
+
+    // Ground & Paved Roads
+    const groundMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(320, 320),
+        new THREE.MeshStandardMaterial({ color: 0xc29b61, roughness: 0.95 })
+    );
+    groundMesh.rotation.x = -Math.PI / 2;
+    groundMesh.receiveShadow = true;
+    scene.add(groundMesh);
+
+    createBox(0, 0.03, 0, 240, 0.06, 15, 0x262930, false, false);
+    createBox(0, 0.04, 0, 15, 0.06, 240, 0x262930, false, false);
+
+    for (let i = -105; i <= 105; i += 14) {
+        if (Math.abs(i) < 12) continue;
+        createBox(i, 0.07, 0, 5, 0.02, 0.35, 0xfacc15, false, false);
+        createBox(0, 0.07, i, 0.35, 0.02, 5, 0xfacc15, false, false);
+    }
+
+    // Football Pitch
+    createBox(-42, 0.05, 42, 34, 0.08, 24, 0x15803d, false, false);
+    createBox(-42, 0.1, 30, 34, 0.03, 0.3, 0xffffff, false, false);
+    createBox(-42, 0.1, 54, 34, 0.03, 0.3, 0xffffff, false, false);
+    createBox(-59, 0.1, 42, 0.3, 0.03, 24, 0xffffff, false, false);
+    createBox(-25, 0.1, 42, 0.3, 0.03, 24, 0xffffff, false, false);
+    createBox(-42, 0.1, 42, 0.25, 0.03, 24, 0xffffff, false, false);
+
+    function createGoalpost(x, z) {
+        createBox(x, 2, z - 3.5, 0.3, 4, 0.3, 0xf8fafc, true);
+        createBox(x, 2, z + 3.5, 0.3, 4, 0.3, 0xf8fafc, true);
+        createBox(x, 4, z, 0.3, 0.3, 7.3, 0xf8fafc, false);
+    }
+    createGoalpost(-57, 42);
+    createGoalpost(-27, 42);
+
+    // Market Stalls & Rooftop Bridges
+    const stallColors = [0xd97706, 0x2563eb, 0xdc2626, 0x059669, 0x7c3aed, 0xdb2777];
+    const stallPositions = [
+        [22, 22], [32, 22], [42, 22],
+        [22, 34], [32, 34], [42, 34]
+    ];
+    stallPositions.forEach(([x, z], idx) => {
+        createBox(x, 0.9, z, 5.2, 1.8, 3.6, 0x78350f, true);
+        createBox(x - 1.3, 2.0, z, 1.2, 0.4, 1.2, 0xef4444, false);
+        createBox(x + 1.1, 2.0, z, 1.2, 0.4, 1.2, 0x22c55e, false);
+        createBox(x, 3.3, z, 6.2, 0.45, 4.6, stallColors[idx % stallColors.length], true);
+        createBox(x - 2.6, 1.65, z - 1.8, 0.2, 3.3, 0.2, 0x5c2808, false);
+        createBox(x + 2.6, 1.65, z - 1.8, 0.2, 3.3, 0.2, 0x5c2808, false);
+        createBox(x - 2.6, 1.65, z + 1.8, 0.2, 3.3, 0.2, 0x5c2808, false);
+        createBox(x + 2.6, 1.65, z + 1.8, 0.2, 3.3, 0.2, 0x5c2808, false);
+        createBox(x + 3.4, 0.55, z, 1.5, 1.1, 1.5, 0x92400e, true);
+    });
+
+    createBox(27, 3.25, 22, 4.4, 0.25, 1.6, 0x92400e, true);
+    createBox(37, 3.25, 22, 4.4, 0.25, 1.6, 0x92400e, true);
+    createBox(27, 3.25, 34, 4.4, 0.25, 1.6, 0x92400e, true);
+    createBox(37, 3.25, 34, 4.4, 0.25, 1.6, 0x92400e, true);
+    createBox(32, 3.25, 28, 1.8, 0.25, 7.8, 0x92400e, true);
+
+    // Danfo Buses
+    function createDanfo(x, z, rotY = 0) {
+        const group = new THREE.Group();
+        group.position.set(x, 0, z);
+        group.rotation.y = rotY;
+        scene.add(group);
+
+        const body = new THREE.Mesh(
+            new THREE.BoxGeometry(4.6, 2.7, 9.2),
+            new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.45 })
+        );
+        body.position.y = 1.75;
+        body.castShadow = true;
+        body.receiveShadow = true;
+        group.add(body);
+
+        const stripe = new THREE.Mesh(
+            new THREE.BoxGeometry(4.68, 0.45, 9.26),
+            new THREE.MeshStandardMaterial({ color: 0x111827 })
+        );
+        stripe.position.y = 1.65;
+        group.add(stripe);
+
+        const glass = new THREE.Mesh(
+            new THREE.BoxGeometry(4.7, 0.85, 8.4),
+            new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.15, metalness: 0.8 })
+        );
+        glass.position.y = 2.45;
+        group.add(glass);
+
+        const rack = new THREE.Mesh(
+            new THREE.BoxGeometry(3.8, 0.25, 6.2),
+            new THREE.MeshStandardMaterial({ color: 0x334155 })
+        );
+        rack.position.y = 3.22;
+        group.add(rack);
+
+        const wheelGeo = new THREE.CylinderGeometry(0.68, 0.68, 0.55, 16);
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111827 });
+        [[-2.25, 0.68, -2.8], [2.25, 0.68, -2.8], [-2.25, 0.68, 2.8], [2.25, 0.68, 2.8]].forEach(([wx, wy, wz]) => {
+            const w = new THREE.Mesh(wheelGeo, wheelMat);
+            w.rotation.z = Math.PI / 2;
+            w.position.set(wx, wy, wz);
+            group.add(w);
+        });
+
+        const isRotated = Math.abs(Math.sin(rotY)) > 0.7;
+        const bw = isRotated ? 9.2 : 4.6;
+        const bd = isRotated ? 4.6 : 9.2;
+        colliders.push({
+            minX: x - bw / 2,
+            maxX: x + bw / 2,
+            minZ: z - bd / 2,
+            maxZ: z + bd / 2,
+            maxY: 3.15
+        });
+    }
+
+    createDanfo(16, -4, 0);
+    createDanfo(-28, 4, Math.PI / 2);
+    createDanfo(4, -36, 0);
+
+    // Keke Napep Tricycles
+    function createKeke(x, z, rotY = 0) {
+        const g = new THREE.Group();
+        g.position.set(x, 0, z);
+        g.rotation.y = rotY;
+        scene.add(g);
+
+        const cab = new THREE.Mesh(
+            new THREE.BoxGeometry(2.3, 1.7, 3.2),
+            new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.5 })
+        );
+        cab.position.y = 1.1;
+        cab.castShadow = true;
+        g.add(cab);
+
+        const roof = new THREE.Mesh(
+            new THREE.BoxGeometry(2.4, 0.2, 3.3),
+            new THREE.MeshStandardMaterial({ color: 0x1e293b })
+        );
+        roof.position.y = 2.05;
+        g.add(roof);
+
+        colliders.push({
+            minX: x - 1.5, maxX: x + 1.5,
+            minZ: z - 1.5, maxZ: z + 1.5,
+            maxY: 2.15
+        });
+    }
+
+    createKeke(-14, -14, 0.4);
+    createKeke(14, 15, -0.8);
+
+    // Compound Houses
+    const buildings = [
+        [-32, -32, 16, 11, 16, 0xfef08a],
+        [-54, -28, 14, 15, 18, 0xfed7aa],
+        [34, -34, 18, 12, 14, 0xbfdbfe],
+        [56, -24, 14, 16, 16, 0xfbcfe8],
+        [-30, -58, 22, 10, 12, 0xd9f99d],
+        [30, 56, 18, 12, 16, 0xfde68a],
+        [56, 40, 14, 14, 18, 0xe9d5ff],
+        [-64, 12, 14, 11, 16, 0xfecdd3]
+    ];
+
+    buildings.forEach(([x, z, w, h, d, col]) => {
+        createBox(x, 0.35, z, w + 1.2, 0.7, d + 1.2, 0x475569, true);
+        createBox(x, h / 2 + 0.35, z, w, h, d, col, true);
+        createBox(x, h + 0.85, z, w + 1.4, 1.0, d + 1.4, 0x7c2d12, true);
+        createBox(x + w / 2 + 1.2, 1.2, z, 2.2, 2.4, 2.2, 0x64748b, true);
+    });
+
+    // Palm Trees
+    function createPalmTree(x, z) {
+        const trunk = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.32, 0.52, 8.5, 8),
+            new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 })
+        );
+        trunk.position.set(x, 4.25, z);
+        trunk.castShadow = true;
+        scene.add(trunk);
+
+        for (let i = 0; i < 6; i++) {
+            const frond = new THREE.Mesh(
+                new THREE.BoxGeometry(0.7, 0.15, 3.8),
+                new THREE.MeshStandardMaterial({ color: 0x15803d })
+            );
+            const angle = (i / 6) * Math.PI * 2;
+            frond.position.set(x + Math.sin(angle) * 1.7, 8.3, z + Math.cos(angle) * 1.7);
+            frond.rotation.y = angle;
+            frond.rotation.x = 0.35;
+            scene.add(frond);
+        }
+        colliders.push({ minX: x - 0.6, maxX: x + 0.6, minZ: z - 0.6, maxZ: z + 0.6, maxY: 8.5 });
+    }
+
+    [[-16, 22], [16, -22], [-50, -8], [52, 12], [-18, -45], [18, 48]].forEach(([x, z]) => createPalmTree(x, z));
+
+    // Perimeter Walls
+    const BOUNDARY = 95;
+    createBox(0, 3, -BOUNDARY, 194, 6, 3, 0x64748b, true);
+    createBox(0, 3, BOUNDARY, 194, 6, 3, 0x64748b, true);
+    createBox(-BOUNDARY, 3, 0, 3, 6, 194, 0x64748b, true);
+    createBox(BOUNDARY, 3, 0, 3, 6, 194, 0x64748b, true);
+
+    const bystanders = [];
+    const powerups = [];
+    const streetTargets = [];
+    const missionTargets = [];
+    const waterProjectiles = [];
+    const smokeClouds = [];
+    const bouncePads = [];
+    const movingTraffic = [];
+
+    const STREET_BOUNTIES = [
+        { id: 'tyre', desc: 'Bounce on 2 Vulcanizer Tyre Stacks', goal: 2, reward: 750 },
+        { id: 'splash', desc: 'Splash Opponent or Bullseye with Pure Water [F]', goal: 2, reward: 850 },
+        { id: 'highroof', desc: 'Climb onto a High Compound Rooftop (Height > 10m)', goal: 1, reward: 900 },
+        { id: 'zobo', desc: 'Collect 2 Chilled Zobo Cups on the Street', goal: 2, reward: 700 }
+    ];
+
+    function updateBountyUI() {
+        const b = STREET_BOUNTIES[STATE.bountyIndex % STREET_BOUNTIES.length];
+        const descEl = document.getElementById('bounty-desc');
+        if (descEl && b) {
+            descEl.innerText = `📋 Bounty: ${b.desc} (${STATE.bountyProgress}/${b.goal})`;
+        }
+    }
+
+    function advanceStreetBounty(typeId) {
+        const b = STREET_BOUNTIES[STATE.bountyIndex % STREET_BOUNTIES.length];
+        if (!b || b.id !== typeId) return;
+        STATE.bountyProgress++;
+        if (STATE.bountyProgress >= b.goal) {
+            sfx.playGoal();
+            earnLagosNaira(b.reward, `street_bounty_${b.id}`);
+            addComboGinger(0.5, 'Street Bounty Completed');
+            pushKillfeed(`📋 BOUNTY COMPLETE! +${formatNaira(b.reward)}`, 'combo');
+            showMessage('📋 STREET BOUNTY COMPLETED!', true, `💰 +${formatNaira(b.reward)} credited to your Lagos Wallet!`, STATE.role);
+            STATE.bountyIndex = (STATE.bountyIndex + 1) % STREET_BOUNTIES.length;
+            STATE.bountyProgress = 0;
+        }
+        updateBountyUI();
+    }
+
+    // Vulcanizer Tyre Bounce Pads (Launch onto tall compound roofs!)
+    const tyrePadCoords = [
+        [-22, -32], [22, -34], [22, 52], [-44, -22], [44, 34], [18, 16]
+    ];
+    tyrePadCoords.forEach(([tx, tz]) => {
+        const padGroup = new THREE.Group();
+        padGroup.position.set(tx, 0, tz);
+        for (let i = 0; i < 3; i++) {
+            const tyre = new THREE.Mesh(
+                new THREE.TorusGeometry(0.95, 0.32, 10, 20),
+                new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 })
+            );
+            tyre.rotation.x = Math.PI / 2;
+            tyre.position.y = 0.28 + i * 0.42;
+            padGroup.add(tyre);
+        }
+        const rimRing = new THREE.Mesh(
+            new THREE.RingGeometry(0.55, 0.95, 20),
+            new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
+        );
+        rimRing.rotation.x = -Math.PI / 2;
+        rimRing.position.y = 1.38;
+        padGroup.add(rimRing);
+        scene.add(padGroup);
+        bouncePads.push({ group: padGroup, pos: new THREE.Vector3(tx, 0, tz), cooldown: 0 });
+    });
+
+    // Moving Keke Napep Street Traffic along the main roads
+    function spawnMovingKeke(axis, laneOffset, startCoord, dirSign, speed) {
+        const g = new THREE.Group();
+        const cab = new THREE.Mesh(
+            new THREE.BoxGeometry(2.4, 1.8, 3.4),
+            new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.45 })
+        );
+        cab.position.y = 1.15;
+        cab.castShadow = true;
+        g.add(cab);
+
+        const roof = new THREE.Mesh(
+            new THREE.BoxGeometry(2.5, 0.22, 3.5),
+            new THREE.MeshStandardMaterial({ color: 0x0f172a })
+        );
+        roof.position.y = 2.15;
+        g.add(roof);
+
+        const windshield = new THREE.Mesh(
+            new THREE.BoxGeometry(2.1, 0.75, 0.15),
+            new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.2 })
+        );
+        windshield.position.set(0, 1.55, 1.72);
+        g.add(windshield);
+
+        scene.add(g);
+        movingTraffic.push({ group: g, axis, laneOffset, coord: startCoord, dirSign, speed, hornCooldown: 0 });
+    }
+
+    spawnMovingKeke('z', -3.6, -75, 1, 14.5);
+    spawnMovingKeke('x', 3.6, 75, -1, 15.5);
+
+    // 🐕 Local Compound Guard Dog ("Bingo / Ekuke")
+    function createBingoDog() {
+        const root = new THREE.Group();
+        root.position.set(18, 0, 26);
+
+        const body = new THREE.Mesh(
+            new THREE.BoxGeometry(0.75, 0.62, 1.35),
+            new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.7 })
+        );
+        body.position.y = 0.65;
+        body.castShadow = true;
+        root.add(body);
+
+        const collar = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 0.22, 0.22),
+            new THREE.MeshStandardMaterial({ color: 0xef4444 })
+        );
+        collar.position.set(0, 0.82, 0.58);
+        root.add(collar);
+
+        const head = new THREE.Mesh(
+            new THREE.BoxGeometry(0.62, 0.56, 0.68),
+            new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.65 })
+        );
+        head.position.set(0, 1.05, 0.82);
+        root.add(head);
+
+        const snout = new THREE.Mesh(
+            new THREE.BoxGeometry(0.36, 0.28, 0.42),
+            new THREE.MeshStandardMaterial({ color: 0x1e293b })
+        );
+        snout.position.set(0, 0.96, 1.24);
+        root.add(snout);
+
+        const tail = new THREE.Mesh(
+            new THREE.BoxGeometry(0.16, 0.5, 0.16),
+            new THREE.MeshStandardMaterial({ color: 0x78350f })
+        );
+        tail.position.set(0, 0.95, -0.72);
+        tail.rotation.x = -0.5;
+        root.add(tail);
+
+        const legGeo = new THREE.BoxGeometry(0.2, 0.52, 0.2);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+        const legs = [];
+        [[-0.24, 0.26, 0.46], [0.24, 0.26, 0.46], [-0.24, 0.26, -0.46], [0.24, 0.26, -0.46]].forEach(([lx, ly, lz]) => {
+            const leg = new THREE.Mesh(legGeo, legMat);
+            leg.position.set(lx, ly, lz);
+            root.add(leg);
+            legs.push(leg);
+        });
+
+        const alertRing = new THREE.Mesh(
+            new THREE.RingGeometry(1.1, 1.32, 24),
+            new THREE.MeshBasicMaterial({ color: 0xf97316, side: THREE.DoubleSide, transparent: true, opacity: 0.7 })
+        );
+        alertRing.rotation.x = -Math.PI / 2;
+        alertRing.position.y = 0.08;
+        root.add(alertRing);
+
+        scene.add(root);
+        return { root, tail, legs, alertRing, homePos: new THREE.Vector3(18, 0, 26), barkCooldown: 0 };
+    }
+
+    const bingoDog = createBingoDog();
+    const galaSnackMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.28, 0.28, 0.65, 12),
+        new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.4 })
+    );
+    galaSnackMesh.rotation.z = Math.PI / 2;
+    galaSnackMesh.visible = false;
+    scene.add(galaSnackMesh);
+
+    // 🌧️ Tropical Lagos Rainstorm Particle System & Road Puddles
+    const rainCount = 420;
+    const rainGeo = new THREE.BufferGeometry();
+    const rainPositions = new Float32Array(rainCount * 6);
+    for (let i = 0; i < rainCount; i++) {
+        const rx = (Math.random() - 0.5) * 90;
+        const ry = Math.random() * 38;
+        const rz = (Math.random() - 0.5) * 90;
+        rainPositions[i * 6] = rx;
+        rainPositions[i * 6 + 1] = ry;
+        rainPositions[i * 6 + 2] = rz;
+        rainPositions[i * 6 + 3] = rx - 0.35;
+        rainPositions[i * 6 + 4] = ry - 1.6;
+        rainPositions[i * 6 + 5] = rz - 0.2;
+    }
+    rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3));
+    const rainMat = new THREE.LineBasicMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.55 });
+    const rainSystem = new THREE.LineSegments(rainGeo, rainMat);
+    rainSystem.visible = false;
+    scene.add(rainSystem);
+
+    const puddleMeshes = [];
+    [[0, 12], [0, -18], [18, 0], [-20, 0], [0, 34], [-4, -32]].forEach(([px, pz]) => {
+        const puddle = new THREE.Mesh(
+            new THREE.CircleGeometry(2.8, 20),
+            new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.08, metalness: 0.85, transparent: true, opacity: 0.65 })
+        );
+        puddle.rotation.x = -Math.PI / 2;
+        puddle.position.set(px, 0.08, pz);
+        puddle.visible = false;
+        scene.add(puddle);
+        puddleMeshes.push(puddle);
+    });
+
+    function setRainstormActive(active) {
+        STATE.isRainstorm = active;
+        rainSystem.visible = active;
+        puddleMeshes.forEach(p => { p.visible = active; });
+        scene.background.setHex(active ? 0x1e293b : 0x7dd3fc);
+        scene.fog.color.setHex(active ? 0x334155 : 0xbae6fd);
+        hemiLight.intensity = active ? 0.62 : 0.9;
+        dirLight.intensity = active ? 0.78 : 1.25;
+
+        const wBtn = document.getElementById('btn-weather');
+        if (wBtn) {
+            wBtn.innerText = active ? '🌧️ Weather: Lagos Rain' : '☀️ Weather: Sunny';
+        }
+        if (active && STATE.isRunning) {
+            sfx.playThunder();
+            pushKillfeed('🌧️ TROPICAL LAGOS RAINSTORM! +25% Hydroplane Dash & Fast Water!', 'info');
+        }
+    }
+
+    function tossGalaSnack() {
+        if (!STATE.isRunning) return;
+        if (!spendLagosNaira(150, 'toss_gala_for_bingo')) return;
+        sfx.playThrow();
+        sfx.playBark();
+        const forward = new THREE.Vector3(-Math.sin(cameraYaw), 0, -Math.cos(cameraYaw)).normalize();
+        galaSnackMesh.position.copy(playerChar.root.position).addScaledVector(forward, 4.5);
+        galaSnackMesh.position.y = 0.32;
+        galaSnackMesh.visible = true;
+        STATE.bingoSnackTimer = 9.0;
+        pushKillfeed('🌭 [YOU] Tossed Gala for Bingo! Bingo is now guarding your snack!', 'good');
+        showMessage('🌭 GALA TOSSED FOR BINGO!', true, '🐕 Bingo loves you now & will chase your opponent instead!', STATE.role);
+    }
+
+    // 🌐 Live WebSocket + Cross-Tab Room Code Multiplayer Manager
+    class MultiplayerRoomManager {
+        constructor() {
+            this.ws = null;
+            this.bc = null;
+            this.clientId = 'naija_' + Math.random().toString(36).substring(2, 9);
+            this.lastSendTime = 0;
+            this.remoteTargetPos = new THREE.Vector3(0, 0, -42);
+            this.remoteTargetRotY = 0;
+        }
+
+        connectRoom(code, isHost) {
+            const cleanCode = code.trim().toUpperCase() || 'EKO1';
+            STATE.roomCode = cleanCode;
+            STATE.isRoomHost = isHost;
+            STATE.peerConnected = false;
+
+            // 1. Local Cross-Tab / Same-Device Instant WebSocket Emulation via BroadcastChannel
+            if (this.bc) this.bc.close();
+            if ('BroadcastChannel' in window) {
+                this.bc = new BroadcastChannel(`naija_room_${cleanCode}`);
+                this.bc.onmessage = (ev) => this.handleIncomingPacket(ev.data);
+            }
+
+            // 2. Live WebSocket Server Connection
+            if (this.ws) {
+                try { this.ws.close(); } catch (e) {}
+                this.ws = null;
+            }
+            const wsUrlInput = document.getElementById('mp-ws-url');
+            const wsUrl = wsUrlInput ? wsUrlInput.value.trim() : '';
+            if (wsUrl && (wsUrl.startsWith('ws://') || wsUrl.startsWith('wss://'))) {
+                try {
+                    this.ws = new WebSocket(wsUrl);
+                    this.ws.onopen = () => {
+                        this.sendPacket({ type: 'JOIN_ROOM', room: cleanCode, isHost });
+                    };
+                    this.ws.onmessage = (ev) => {
+                        try {
+                            const data = JSON.parse(ev.data);
+                            this.handleIncomingPacket(data);
+                        } catch (err) {}
+                    };
+                    this.ws.onerror = () => {};
+                } catch (e) {}
+            }
+
+            this.updateLobbyUI();
+            this.sendPacket({ type: 'HELLO_PEER', room: cleanCode, isHost });
+        }
+
+        sendPacket(payload) {
+            if (!STATE.roomCode) return;
+            const packet = { ...payload, sender: this.clientId, room: STATE.roomCode };
+            if (this.bc) {
+                try { this.bc.postMessage(packet); } catch (e) {}
+            }
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                try { this.ws.send(JSON.stringify(packet)); } catch (e) {}
+            }
+        }
+
+        handleIncomingPacket(data) {
+            if (!data || data.sender === this.clientId || data.room !== STATE.roomCode) return;
+
+            if (data.type === 'HELLO_PEER' || data.type === 'WELCOME_PEER') {
+                STATE.peerConnected = true;
+                this.updateLobbyUI();
+                if (data.type === 'HELLO_PEER') {
+                    this.sendPacket({ type: 'WELCOME_PEER', isHost: STATE.isRoomHost });
+                }
+            } else if (data.type === 'START_MP_MATCH') {
+                STATE.peerConnected = true;
+                STATE.isMultiplayerRoom = true;
+                document.getElementById('multiplayer-modal')?.classList.add('hidden');
+                const myRole = STATE.isRoomHost ? 'police' : 'thief';
+                startGame(myRole, false);
+            } else if (data.type === 'PLAYER_SYNC' && STATE.isRunning && STATE.isMultiplayerRoom) {
+                this.remoteTargetPos.set(data.x, data.y, data.z);
+                this.remoteTargetRotY = data.rotY;
+            } else if (data.type === 'WATER_THROW' && STATE.isRunning && STATE.isMultiplayerRoom) {
+                throwPureWater(new THREE.Vector3(data.x, data.y, data.z), data.yaw, data.pitch, false);
+            } else if (data.type === 'SMOKE_DROP' && STATE.isRunning && STATE.isMultiplayerRoom) {
+                spawnSmokeCloud(new THREE.Vector3(data.x, data.y, data.z), STATE.role === 'police' ? 'thief' : 'police');
+            } else if (data.type === 'KEY_GRAB' && STATE.isRunning && STATE.isMultiplayerRoom) {
+                const target = missionTargets[data.index];
+                if (target && !target.collected) {
+                    target.collected = true;
+                    target.mesh.visible = false;
+                    STATE.aiTargetsCollected++;
+                    updateScoreboard();
+                    updateDanfoLockVisuals();
+                    pushKillfeed(`🔑 [PLAYER 2] Grabbed Gold Key (${STATE.aiTargetsCollected}/3)!`, 'bad');
+                }
+            } else if (data.type === 'ROUND_EVENT' && STATE.isRunning && STATE.isMultiplayerRoom) {
+                if (data.outcome === 'CAPTURE') handleCapture();
+                else if (data.outcome === 'JAPA') handleThiefJapa(STATE.role === 'thief');
+            }
+        }
+
+        updateLobbyUI() {
+            const box = document.getElementById('mp-lobby-box');
+            const codeEl = document.getElementById('mp-active-code');
+            const badgeEl = document.getElementById('mp-status-badge');
+            const guestEl = document.getElementById('mp-slot-guest');
+            const startBtn = document.getElementById('btn-mp-start-match');
+
+            if (box) box.classList.remove('hidden');
+            if (codeEl) codeEl.innerText = STATE.roomCode;
+            if (STATE.peerConnected) {
+                if (badgeEl) {
+                    badgeEl.innerText = '🟢 2/2 Players Connected & Ready!';
+                    badgeEl.className = 'text-[11px] font-extrabold text-emerald-400';
+                }
+                if (guestEl) {
+                    guestEl.innerText = 'Connected ✅';
+                    guestEl.className = 'font-bold text-emerald-300';
+                }
+                if (startBtn) {
+                    startBtn.disabled = false;
+                    startBtn.innerText = '🚀 Launch Live 2-Player Match!';
+                }
+            } else {
+                if (badgeEl) {
+                    badgeEl.innerText = '🟡 Waiting for Player 2 to Join...';
+                    badgeEl.className = 'text-[11px] font-bold text-amber-300';
+                }
+                if (guestEl) {
+                    guestEl.innerText = 'Waiting for Code...';
+                    guestEl.className = 'font-bold text-slate-500';
+                }
+                if (startBtn) {
+                    startBtn.disabled = true;
+                    startBtn.innerText = '⏳ Waiting for Second Session to Connect...';
+                }
+            }
+        }
+    }
+
+    const mpManager = new MultiplayerRoomManager();
+
+    // Football on Pitch
+    const ballMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.65, 16, 16),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
+    );
+    ballMesh.position.set(-42, 0.65, 42);
+    ballMesh.castShadow = true;
+    scene.add(ballMesh);
+    const ballVel = new THREE.Vector3();
+
+    // Japa Extraction Bus Stop Zone
+    const japaSpots = [
+        new THREE.Vector3(16, 0, -11),
+        new THREE.Vector3(-35, 0, 4),
+        new THREE.Vector3(4, 0, -43),
+        new THREE.Vector3(32, 0, 44)
+    ];
+    let currentJapaSpotIndex = 0;
+
+    const japaZoneGroup = new THREE.Group();
+    const japaRing = new THREE.Mesh(
+        new THREE.TorusGeometry(3.4, 0.18, 12, 36),
+        new THREE.MeshBasicMaterial({ color: 0x10b981 })
+    );
+    japaRing.rotation.x = Math.PI / 2;
+    japaRing.position.y = 0.25;
+    japaZoneGroup.add(japaRing);
+
+    const japaBeacon = new THREE.Mesh(
+        new THREE.CylinderGeometry(3.2, 3.2, 5.5, 24, 1, true),
+        new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.22, side: THREE.DoubleSide })
+    );
+    japaBeacon.position.y = 2.75;
+    japaZoneGroup.add(japaBeacon);
+    japaZoneGroup.position.copy(japaSpots[0]);
+    scene.add(japaZoneGroup);
+
+    // Cold Zobo Pickups
+    const zoboCoords = [
+        [0, 0.9, 0],
+        [32, 4.3, 22],
+        [-42, 0.9, 25],
+        [16, 4.0, -4],
+        [-22, 0.9, -22],
+        [44, 0.9, -12]
+    ];
+    zoboCoords.forEach(([x, y, z]) => {
+        const mesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.45, 0.38, 1.05, 12),
+            new THREE.MeshStandardMaterial({ color: 0xbe123c, emissive: 0x881337, emissiveIntensity: 0.4 })
+        );
+        mesh.position.set(x, y, z);
+        scene.add(mesh);
+        powerups.push({ mesh, baseY: y, cooldown: 0 });
+    });
+
+    // 5 Spinning Bullseye Targets
+    const bullseyeCoords = [
+        [22, 5.2, 22],
+        [42, 5.2, 34],
+        [16, 5.0, -4],
+        [-57, 5.2, 42],
+        [0, 4.5, -24]
+    ];
+    bullseyeCoords.forEach(([x, y, z]) => {
+        const grp = new THREE.Group();
+        grp.position.set(x, y, z);
+        const outer = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.15, 1.15, 0.18, 20),
+            new THREE.MeshStandardMaterial({ color: 0xef4444 })
+        );
+        outer.rotation.x = Math.PI / 2;
+        grp.add(outer);
+        const inner = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.55, 0.55, 0.24, 20),
+            new THREE.MeshStandardMaterial({ color: 0xfacc15 })
+        );
+        inner.rotation.x = Math.PI / 2;
+        grp.add(inner);
+        scene.add(grp);
+        streetTargets.push({ group: grp, cooldown: 0 });
+    });
+
+    // 3 Golden Mission Loot Targets
+    const lootCoords = [
+        [32, 4.4, 28],
+        [-28, 4.2, 4],
+        [-32, 3.6, -18]
+    ];
+    lootCoords.forEach(([x, y, z]) => {
+        const mesh = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.85, 0),
+            new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xd97706, emissiveIntensity: 0.5, metalness: 0.6, roughness: 0.2 })
+        );
+        mesh.position.set(x, y, z);
+        scene.add(mesh);
+        missionTargets.push({ mesh, baseY: y, collected: false });
+    });
+
+    function createCharacter(shirtColor, pantsColor, hatColor) {
+        const root = new THREE.Group();
+
+        const torso = new THREE.Mesh(
+            new THREE.BoxGeometry(1.15, 1.45, 0.65),
+            new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.6 })
+        );
+        torso.position.y = 1.95;
+        torso.castShadow = true;
+        root.add(torso);
+
+        const head = new THREE.Mesh(
+            new THREE.BoxGeometry(0.82, 0.82, 0.82),
+            new THREE.MeshStandardMaterial({ color: 0x7c4727, roughness: 0.55 })
+        );
+        head.position.y = 3.15;
+        head.castShadow = true;
+        root.add(head);
+
+        const cap = new THREE.Mesh(
+            new THREE.BoxGeometry(0.9, 0.32, 0.98),
+            new THREE.MeshStandardMaterial({ color: hatColor })
+        );
+        cap.position.set(0, 3.62, 0.06);
+        root.add(cap);
+
+        const limbGeo = new THREE.BoxGeometry(0.38, 1.15, 0.38);
+        const armMat = new THREE.MeshStandardMaterial({ color: shirtColor });
+        const legMat = new THREE.MeshStandardMaterial({ color: pantsColor });
+
+        const leftArm = new THREE.Mesh(limbGeo, armMat);
+        leftArm.position.set(-0.82, 1.95, 0);
+        root.add(leftArm);
+
+        const rightArm = new THREE.Mesh(limbGeo, armMat);
+        rightArm.position.set(0.82, 1.95, 0);
+        root.add(rightArm);
+
+        const leftLeg = new THREE.Mesh(limbGeo, legMat);
+        leftLeg.position.set(-0.32, 0.65, 0);
+        root.add(leftLeg);
+
+        const rightLeg = new THREE.Mesh(limbGeo, legMat);
+        rightLeg.position.set(0.32, 0.65, 0);
+        root.add(rightLeg);
+
+        scene.add(root);
+        return { root, torso, head, cap, leftArm, rightArm, leftLeg, rightLeg };
+    }
+
+    const playerChar = createCharacter(0x1d4ed8, 0x0f172a, 0x1e3a8a);
+    const aiChar = createCharacter(0xe11d48, 0x1f2937, 0x9f1239);
+    const backupCopChar = createCharacter(0x0f172a, 0x020617, 0xdc2626);
+    backupCopChar.root.visible = false;
+    let aiVelY = 0;
+    let backupVelY = 0;
+
+    function createBystander(x, z, shirtColor, hatColor, phrases) {
+        const char = createCharacter(shirtColor, 0x1e293b, hatColor);
+        char.root.position.set(x, 0, z);
+        bystanders.push({ char, phrases, cooldown: 0 });
+    }
+
+    createBystander(17, 22, 0xec4899, 0xfacc15, [
+        "Mama Put: Watch my pot of Jollof o!",
+        "Mama Put: Oya run o! No scatter my market!"
+    ]);
+    createBystander(12, -8, 0x16a34a, 0xdc2626, [
+        "Agbero: Oshodi Underbridge! Enter with your change o!",
+        "Agbero: Oya Japa! Danfo dey move!"
+    ]);
+
+    // 3D Directional GPS Ring under Player
+    const gpsGroup = new THREE.Group();
+    const gpsRing = new THREE.Mesh(
+        new THREE.RingGeometry(1.15, 1.38, 28),
+        new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.75 })
+    );
+    gpsRing.rotation.x = -Math.PI / 2;
+    gpsRing.position.y = 0.12;
+    gpsGroup.add(gpsRing);
+
+    const gpsArrow = new THREE.Mesh(
+        new THREE.ConeGeometry(0.42, 0.95, 8),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+    );
+    gpsArrow.rotation.x = Math.PI / 2;
+    gpsArrow.position.set(0, 0.22, 1.85);
+    gpsGroup.add(gpsArrow);
+    scene.add(gpsGroup);
+
+    function applyCharacterColors() {
+        const isPlayerPolice = STATE.role === 'police';
+        let playerShirt = isPlayerPolice ? 0x2563eb : 0xe11d48;
+        let playerHat = isPlayerPolice ? 0x1e3a8a : 0x9f1239;
+        if (STATE.playerDrip === 'eagles') {
+            playerShirt = 0x16a34a;
+            playerHat = 0xffffff;
+        } else if (STATE.playerDrip === 'agbada') {
+            playerShirt = 0xf59e0b;
+            playerHat = 0x78350f;
+        }
+        playerChar.torso.material.color.setHex(playerShirt);
+        playerChar.cap.material.color.setHex(playerHat);
+        aiChar.torso.material.color.setHex(isPlayerPolice ? 0xe11d48 : 0x2563eb);
+        aiChar.cap.material.color.setHex(isPlayerPolice ? 0x9f1239 : 0x1e3a8a);
+        backupCopChar.root.visible = !isPlayerPolice;
+    }
+
+    const keys = { w: false, a: false, s: false, d: false, shift: false, space: false };
+    const playerVel = new THREE.Vector3();
+    let playerGrounded = true;
+    let coyoteTimer = 0;
+    let jumpBufferTimer = 0;
+
+    let cameraYaw = 0;
+    let cameraPitch = 0.36;
+    let targetCameraYaw = 0;
+    let targetCameraPitch = 0.36;
+    let cameraDistance = 12.5;
+    const smoothedCameraFocus = new THREE.Vector3();
+
+    function spawnSmokeCloud(pos, ownerRole) {
+        const group = new THREE.Group();
+        group.position.copy(pos);
+        for (let i = 0; i < 7; i++) {
+            const puff = new THREE.Mesh(
+                new THREE.SphereGeometry(1.5 + Math.random() * 1.2, 10, 10),
+                new THREE.MeshStandardMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.65, roughness: 1 })
+            );
+            puff.position.set((Math.random() - 0.5) * 3.2, 1.0 + Math.random() * 1.8, (Math.random() - 0.5) * 3.2);
+            group.add(puff);
+        }
+        scene.add(group);
+        smokeClouds.push({ group, life: 6.5, ownerRole });
+    }
+
+    function throwPureWater(originPos, aimYaw, aimPitch, isFromPlayer = true) {
+        sfx.playThrow();
+        const mesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.32, 10, 10),
+            new THREE.MeshStandardMaterial({
+                color: isFromPlayer ? 0x38bdf8 : 0xf43f5e,
+                emissive: isFromPlayer ? 0x0284c7 : 0xe11d48,
+                emissiveIntensity: 0.45
+            })
+        );
+        mesh.position.copy(originPos).add(new THREE.Vector3(0, 2.4, 0));
+        scene.add(mesh);
+
+        const speed = isFromPlayer && STATE.hasWaterCooler ? 46 : 36;
+        const dir = new THREE.Vector3(
+            -Math.sin(aimYaw) * Math.cos(aimPitch * 0.4),
+            Math.max(0.08, -Math.sin(aimPitch) * 0.45 + 0.14),
+            -Math.cos(aimYaw) * Math.cos(aimPitch * 0.4)
+        ).normalize();
+
+        waterProjectiles.push({
+            mesh,
+            vel: dir.multiplyScalar(speed),
+            life: 2.2,
+            isFromPlayer
+        });
+    }
+
+    function triggerPlayerDash() {
+        if (!STATE.isRunning || STATE.dashCooldown > 0) return;
+        sfx.playDash();
+        STATE.dashCooldown = STATE.role === 'thief' ? 2.2 : 3.0;
+        STATE.dashActiveTimer = 0.34;
+        STATE.playerSlowTimer = 0;
+        if (STATE.role === 'thief') {
+            STATE.speedBoostTimer = Math.max(STATE.speedBoostTimer, 1.4);
+        }
+        const dashPower = STATE.role === 'thief' ? 34 : 29;
+        const dashYaw = playerChar.root.rotation.y;
+        playerVel.x = Math.sin(dashYaw) * dashPower;
+        playerVel.z = Math.cos(dashYaw) * dashPower;
+    }
+
+    function triggerPlayerSmoke() {
+        if (!STATE.isRunning || STATE.smokeCooldown > 0) return;
+        sfx.playDash();
+        STATE.smokeCooldown = 8.0;
+        spawnSmokeCloud(playerChar.root.position, STATE.role);
+        if (STATE.isMultiplayerRoom) {
+            mpManager.sendPacket({
+                type: 'SMOKE_DROP',
+                x: playerChar.root.position.x,
+                y: playerChar.root.position.y,
+                z: playerChar.root.position.z
+            });
+        }
+        showMessage("I-BETTER-PASS-MY-NEIGHBOUR SMOKE!", true, "💨 Pursuer slowed inside smoke cloud!", STATE.role);
+    }
+
+    function triggerPlayerWaterThrow() {
+        if (!STATE.isRunning || STATE.throwCooldown > 0) return;
+        let cd = STATE.hasWaterCooler ? 0.65 : 1.3;
+        if (STATE.isRainstorm) cd *= 0.75;
+        STATE.throwCooldown = cd;
+        throwPureWater(playerChar.root.position, cameraYaw, cameraPitch, true);
+        if (STATE.isMultiplayerRoom) {
+            mpManager.sendPacket({
+                type: 'WATER_THROW',
+                x: playerChar.root.position.x,
+                y: playerChar.root.position.y,
+                z: playerChar.root.position.z,
+                yaw: cameraYaw,
+                pitch: cameraPitch
+            });
+        }
+    }
+
+    function buyInGameZobo() {
+        if (!STATE.isRunning) return;
+        if (spendLagosNaira(300, 'in_match_zobo_delivery')) {
+            sfx.playPowerup();
+            STATE.stamina = 100;
+            STATE.speedBoostTimer = 6.0;
+            pushKillfeed(`🥤 [YOU] Bought Express Zobo (-₦300)`, 'good');
+            showMessage("EXPRESS COLD ZOBO DELIVERED!", true, "⚡ 100% Stamina + 6s Turbo Speed (-₦300)", STATE.role);
+        }
+    }
+
+    function buyInGameDecoy() {
+        if (!STATE.isRunning) return;
+        if (spendLagosNaira(800, 'in_match_street_decoy')) {
+            sfx.playPowerup();
+            STATE.playerSlowTimer = 0;
+            STATE.aiSlowTimer = 5.0;
+            spawnSmokeCloud(playerChar.root.position, STATE.role);
+            pushKillfeed(`💨 [YOU] Deployed Street Decoy (-₦800)`, 'good');
+            showMessage("AREA BOY DECOY DEPLOYED!", true, "💨 Opponent slowed for 5s & Smoke dropped (-₦800)", STATE.role);
+        }
+    }
+
+    const roundBadge = document.getElementById('round-badge');
+    const timerDisplay = document.getElementById('timer-display');
+    const scorePoliceEl = document.getElementById('score-police');
+    const scoreThiefEl = document.getElementById('score-thief');
+    const objectiveTitle = document.getElementById('objective-title');
+    const objectiveDesc = document.getElementById('objective-desc');
+    const targetDistanceEl = document.getElementById('target-distance');
+    const japaDistanceEl = document.getElementById('japa-distance');
+    const targetsProgressEl = document.getElementById('targets-progress');
+    const staminaBar = document.getElementById('stamina-bar');
+    const staminaLabel = document.getElementById('stamina-label');
+    const dashStatus = document.getElementById('dash-status');
+    const throwStatus = document.getElementById('throw-status');
+    const smokeStatus = document.getElementById('smoke-status');
+    const messageCenter = document.getElementById('message-center');
+    const messageText = document.getElementById('message-text');
+    const messageSub = document.getElementById('message-sub');
+    const startMenu = document.getElementById('start-menu');
+    const pauseMenu = document.getElementById('pause-menu');
+    const gameOverMenu = document.getElementById('game-over-menu');
+    const uiLayer = document.getElementById('ui-layer');
+    const crosshair = document.getElementById('crosshair');
+    const minimapCanvas = document.getElementById('minimap');
+    const minimapCtx = minimapCanvas ? minimapCanvas.getContext('2d') : null;
+    const menuShopFeedback = document.getElementById('menu-shop-feedback');
+
+    let messageTimeout = null;
+    function showMessage(mainText, isGood = true, subText = "", speaker = 'police') {
+        if (!messageCenter || !messageText || !messageSub) return;
+        messageText.innerText = mainText;
+        messageSub.innerText = subText;
+        messageText.className = `text-xs sm:text-sm font-bold tracking-wide leading-snug ${isGood ? 'text-yellow-300' : 'text-rose-300'}`;
+        messageCenter.classList.remove('opacity-0', '-translate-y-2', 'scale-95');
+        messageCenter.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+        if (messageTimeout) clearTimeout(messageTimeout);
+        messageTimeout = setTimeout(() => {
+            messageCenter.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
+            messageCenter.classList.add('opacity-0', '-translate-y-2', 'scale-95');
+        }, 2800);
+    }
+
+    function updateScoreboard() {
+        if (roundBadge && !STATE.isWarrantMode) {
+            roundBadge.innerText = STATE.isOvertime ? "⚡ OVERTIME" : `ROUND ${STATE.round}`;
+        }
+        if (scorePoliceEl) scorePoliceEl.innerText = String(STATE.scorePolice);
+        if (scoreThiefEl) scoreThiefEl.innerText = String(STATE.scoreThief);
+        if (targetsProgressEl) {
+            const count = STATE.role === 'thief' ? STATE.targetsCollected : STATE.aiTargetsCollected;
+            targetsProgressEl.innerText = `🎯 Loot: ${count}/${STATE.totalTargetsNeeded}`;
+        }
+    }
+
+    function resetPositions() {
+        playerChar.root.position.set(0, 0, 28);
+        aiChar.root.position.set(0, 0, -42);
+        backupCopChar.root.position.set(-44, 0, -18);
+        backupCopChar.root.visible = (STATE.role === 'thief' && !STATE.isMultiplayerRoom);
+        aiVelY = 0;
+        backupVelY = 0;
+        playerVel.set(0, 0, 0);
+        STATE.targetsCollected = 0;
+        STATE.aiTargetsCollected = 0;
+        STATE.boardingProgress = 0;
+        STATE.playerSlowTimer = 0;
+        STATE.headStartTimer = 3.0;
+        STATE.aiThrowCooldown = 5.0;
+        STATE.backupThrowCooldown = 6.5;
+        setRainstormActive(STATE.round % 2 === 0);
+        missionTargets.forEach(t => {
+            t.collected = false;
+            t.mesh.visible = true;
+        });
+        currentJapaSpotIndex = (currentJapaSpotIndex + 1) % japaSpots.length;
+        japaZoneGroup.position.copy(japaSpots[currentJapaSpotIndex]);
+        updateDanfoLockVisuals();
+        updateScoreboard();
+    }
+
+    function isDanfoUnlockedForThief() {
+        if (STATE.role === 'thief') {
+            return STATE.targetsCollected >= STATE.totalTargetsNeeded;
+        }
+        return STATE.aiTargetsCollected >= STATE.totalTargetsNeeded;
+    }
+
+    function isThiefInGreenSanctuary() {
+        return STATE.role === 'thief' &&
+            isDanfoUnlockedForThief() &&
+            playerChar.root.position.distanceTo(japaZoneGroup.position) < 4.0;
+    }
+
+    function updateDanfoLockVisuals() {
+        const unlocked = isDanfoUnlockedForThief();
+        const inSanctuary = isThiefInGreenSanctuary();
+        japaRing.material.color.setHex(inSanctuary ? 0xfacc15 : unlocked ? 0x10b981 : 0xef4444);
+        japaBeacon.material.color.setHex(inSanctuary ? 0xfde047 : unlocked ? 0x34d399 : 0xf43f5e);
+        japaBeacon.material.opacity = inSanctuary ? 0.38 : 0.22;
+
+        const banner = document.getElementById('danfo-lock-banner');
+        const statusEl = document.getElementById('danfo-lock-status');
+        const pctEl = document.getElementById('danfo-board-pct');
+        const barEl = document.getElementById('danfo-board-bar');
+
+        if (!banner) return;
+        if (STATE.role === 'thief') {
+            banner.classList.remove('hidden');
+            const pct = Math.min(100, Math.round((STATE.boardingProgress / 1.5) * 100));
+            if (pctEl) pctEl.innerText = unlocked ? `BOARD: ${pct}%` : `${STATE.targetsCollected}/${STATE.totalTargetsNeeded} KEYS`;
+            if (barEl) barEl.style.width = unlocked ? `${pct}%` : `${Math.round((STATE.targetsCollected / STATE.totalTargetsNeeded) * 100)}%`;
+            if (statusEl) {
+                if (!unlocked) {
+                    statusEl.innerText = `🔒 DANFO LOCKED: Grab all 3 Gold Keys on roofs to unlock Bus!`;
+                    statusEl.className = 'text-rose-400 font-bold';
+                } else if (inSanctuary || STATE.boardingProgress > 0) {
+                    statusEl.innerText = `🛡️ SAFE IN GREEN ZONE! Agbero blocking Police — Boarding...`;
+                    statusEl.className = 'text-emerald-300 font-extrabold animate-pulse';
+                } else {
+                    statusEl.innerText = `🔓 DANFO UNLOCKED! Reach the Green Safe Ring to board!`;
+                    statusEl.className = 'text-emerald-400 font-bold';
+                }
+            }
+        } else {
+            banner.classList.add('hidden');
+        }
+    }
+
+    function handleCapture() {
+        sfx.playSiren();
+        STATE.round++;
+        STATE.scorePolice++;
+        const msg = STATE.pidginPolice[Math.floor(Math.random() * STATE.pidginPolice.length)];
+        if (STATE.role === 'police') {
+            addComboGinger(0.5, "Tackle Capture");
+            const reward = Math.round(400 * STATE.comboMultiplier);
+            earnLagosNaira(reward, 'police_capture_reward');
+            pushKillfeed(`🚓 [YOU] Tackled Thief (+${formatNaira(reward)})`, 'good');
+            showMessage(msg, true, `🚓 +1 Police Pt & +${formatNaira(reward)} (${STATE.comboMultiplier.toFixed(1)}x Ginger)!`, 'police');
+        } else {
+            STATE.comboMultiplier = 1.0;
+            updateCompetitiveUI();
+            pushKillfeed(`🚨 [AI] Caught You! Combo Reset`, 'bad');
+            showMessage(msg, false, "🚓 Officer caught you! +1 Police Point!", 'police');
+        }
+        updateScoreboard();
+        if (STATE.isOvertime || STATE.isWarrantMode) {
+            endGame();
+            return;
+        }
+        resetPositions();
+    }
+
+    function handleThiefJapa(isPlayerThief) {
+        sfx.playPowerup();
+        STATE.round++;
+        const bonus = (isPlayerThief && STATE.targetsCollected >= STATE.totalTargetsNeeded) ||
+                      (!isPlayerThief && STATE.aiTargetsCollected >= STATE.totalTargetsNeeded) ? 2 : 1;
+        STATE.scoreThief += bonus;
+        const msg = STATE.pidginThief[Math.floor(Math.random() * STATE.pidginThief.length)];
+        if (isPlayerThief) {
+            addComboGinger(0.5, "Danfo Japa Escape");
+            const cashReward = Math.round(bonus * 450 * STATE.comboMultiplier);
+            earnLagosNaira(cashReward, 'thief_japa_reward');
+            pushKillfeed(`🚐 [YOU] Japa in Danfo (+${formatNaira(cashReward)})`, 'good');
+            showMessage(msg, true, `🚐 +${bonus} Thief Pt & +${formatNaira(cashReward)} (${STATE.comboMultiplier.toFixed(1)}x)!`, 'thief');
+        } else {
+            STATE.comboMultiplier = 1.0;
+            updateCompetitiveUI();
+            pushKillfeed(`🚐 [AI] Escaped in Danfo! (+${bonus} Pt)`, 'bad');
+            showMessage(msg, false, `🚐 The Thief escaped into the Japa Danfo! +${bonus} Thief Point!`, 'thief');
+        }
+        updateScoreboard();
+        if (STATE.isOvertime || STATE.isWarrantMode) {
+            endGame();
+            return;
+        }
+        resetPositions();
+    }
+
+    function updateCompassAndRadar() {
+        const pPos = playerChar.root.position;
+        const aPos = aiChar.root.position;
+        const bPos = backupCopChar.root.position;
+        const jPos = japaZoneGroup.position;
+
+        const distMain = pPos.distanceTo(aPos);
+        const distBackup = STATE.role === 'thief' ? pPos.distanceTo(bPos) : 999;
+        const distOpp = Math.round(Math.min(distMain, distBackup));
+        const distJapa = Math.round(pPos.distanceTo(jPos));
+        if (targetDistanceEl) {
+            targetDistanceEl.innerText = STATE.role === 'thief'
+                ? `🚨 Closest Cop: ${distOpp}m`
+                : `🎯 Opp: ${distOpp}m`;
+            targetDistanceEl.className = (STATE.role === 'thief' && distOpp <= 15)
+                ? 'text-rose-400 font-extrabold animate-pulse'
+                : 'text-cyan-300 font-semibold';
+        }
+        if (japaDistanceEl) japaDistanceEl.innerText = `🚐 Danfo: ${distJapa}m`;
+
+        // 3D GPS Arrow under player: points to nearest uncollected key first if Danfo is locked!
+        gpsGroup.position.set(pPos.x, pPos.y, pPos.z);
+        let goalPos = STATE.role === 'police' ? aPos : jPos;
+        if (STATE.role === 'thief' && !isDanfoUnlockedForThief()) {
+            let nearestKey = null;
+            let bestDist = Infinity;
+            missionTargets.forEach(t => {
+                if (!t.collected) {
+                    const d = pPos.distanceTo(t.mesh.position);
+                    if (d < bestDist) {
+                        bestDist = d;
+                        nearestKey = t.mesh.position;
+                    }
+                }
+            });
+            if (nearestKey) goalPos = nearestKey;
+        }
+        const angleToGoal = Math.atan2(goalPos.x - pPos.x, goalPos.z - pPos.z);
+        gpsGroup.rotation.y = angleToGoal;
+
+        // Compass Tape
+        const deg = Math.round(((( -cameraYaw * 180 / Math.PI) % 360) + 360) % 360);
+        const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+        const dirIdx = Math.round(deg / 45) % 8;
+        const compassDegEl = document.getElementById('compass-deg');
+        const compassTapeEl = document.getElementById('compass-tape');
+        if (compassDegEl) compassDegEl.innerText = `${deg}° ${dirs[dirIdx]}`;
+        if (compassTapeEl) {
+            const prevDir = dirs[(dirIdx + 7) % 8];
+            const nextDir = dirs[(dirIdx + 1) % 8];
+            compassTapeEl.innerText = `${prevDir} | ${dirs[dirIdx]} | ${nextDir}`;
+        }
+
+        // 360° Minimap Radar
+        if (!minimapCtx) return;
+        const ctx = minimapCtx;
+        const w = 96, h = 96, cx = 48, cy = 48;
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 46, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 24, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const scale = 0.45;
+        function plotPoint(wx, wz, color, radius = 3.5) {
+            const dx = (wx - pPos.x) * scale;
+            const dz = (wz - pPos.z) * scale;
+            const rot = cameraYaw;
+            const rx = dx * Math.cos(rot) - dz * Math.sin(rot);
+            const rz = dx * Math.sin(rot) + dz * Math.cos(rot);
+            const dist = Math.min(41, Math.hypot(rx, rz));
+            const ang = Math.atan2(rz, rx);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(cx + Math.cos(ang) * dist, cy + Math.sin(ang) * dist, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        plotPoint(jPos.x, jPos.z, isDanfoUnlockedForThief() ? '#10b981' : '#ef4444', 4.5);
+        missionTargets.forEach(t => {
+            if (!t.collected) plotPoint(t.mesh.position.x, t.mesh.position.z, '#facc15', 3.5);
+        });
+        plotPoint(aPos.x, aPos.z, STATE.role === 'police' ? '#f43f5e' : '#3b82f6', 4.5);
+        if (STATE.role === 'thief') {
+            plotPoint(bPos.x, bPos.z, '#60a5fa', 4.2);
+        }
+
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3.8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function requestGamePointerLock() {
+        try {
+            if (renderer && renderer.domElement && renderer.domElement.requestPointerLock) {
+                renderer.domElement.requestPointerLock();
+            }
+        } catch (e) {}
+    }
+
+    function startGame(role, isWarrantDispatch = false) {
+        sfx.init();
+        STATE.isWarrantMode = isWarrantDispatch;
+        if (!isWarrantDispatch && STATE.selectedStake > 0) {
+            if (!spendLagosNaira(STATE.selectedStake, 'match_entry_stake')) {
+                return;
+            }
+        }
+        STATE.role = role;
+        STATE.round = 1;
+        STATE.timeLeft = isWarrantDispatch ? 90 : 300;
+        STATE.isOvertime = false;
+        STATE.scorePolice = 0;
+        STATE.scoreThief = 0;
+        STATE.stamina = 100;
+        STATE.comboMultiplier = 1.0;
+        STATE.maxMatchCombo = 1.0;
+        STATE.comboTimer = 0;
+        STATE.matchEarnings = isWarrantDispatch ? 0 : -STATE.selectedStake;
+        STATE.bountyProgress = 0;
+        STATE.isRunning = true;
+
+        applyCharacterColors();
+        updateScoreboard();
+        updateCompetitiveUI();
+        updateBountyUI();
+        resetPositions();
+        if (killfeedContainer) killfeedContainer.innerHTML = '';
+
+        const netBadge = document.getElementById('hud-net-badge');
+        if (netBadge) {
+            if (STATE.isMultiplayerRoom) {
+                netBadge.classList.remove('hidden');
+                netBadge.innerText = `🌐 ROOM: ${STATE.roomCode}`;
+            } else {
+                netBadge.classList.add('hidden');
+            }
+        }
+
+        if (isWarrantDispatch) {
+            if (roundBadge) roundBadge.innerText = `🚨 ${'⭐'.repeat(STATE.warrantStars)} WARRANT`;
+            pushKillfeed(`🚨 POLICE DISPATCH: ${STATE.warrantCrime}`, 'bad');
+            if (role === 'thief') {
+                if (objectiveTitle) objectiveTitle.innerText = `🚨 WANTED (${'⭐'.repeat(STATE.warrantStars)}) — 2 MOPOL UNITS DEPLOYED!`;
+                if (objectiveDesc) objectiveDesc.innerText = "Grab all 3 Gold Keys on rooftops to unlock the Green Safe Danfo Ring & escape!";
+            } else {
+                if (objectiveTitle) objectiveTitle.innerText = `🚓 WARRANT OFFICER — BOUNTY: ₦3,500`;
+                if (objectiveDesc) objectiveDesc.innerText = "Tackle the reported suspect before they reach the Green Danfo Sanctuary!";
+            }
+        } else {
+            pushKillfeed(`🏁 Ranked Match Started (${STATE.difficulty.toUpperCase()})`, 'info');
+            if (role === 'police') {
+                if (objectiveTitle) objectiveTitle.innerText = `🚓 POLICE (STAKE: ${formatNaira(STATE.selectedStake)})`;
+                if (objectiveDesc) objectiveDesc.innerText = "Build Ginger Combos, deny Loot & tackle the Thief!";
+            } else {
+                if (objectiveTitle) objectiveTitle.innerText = `🏃🏾‍♂️ THIEF (STAKE: ${formatNaira(STATE.selectedStake)})`;
+                if (objectiveDesc) objectiveDesc.innerText = "Outrun 2 Police Units! Grab all 3 Gold Keys to unlock the Safe Green Danfo Ring!";
+            }
+        }
+
+        document.getElementById('police-warrant-modal')?.classList.add('hidden');
+        startMenu?.classList.add('hidden');
+        pauseMenu?.classList.add('hidden');
+        gameOverMenu?.classList.add('hidden');
+        uiLayer?.classList.remove('hidden');
+        crosshair?.classList.remove('hidden');
+
+        requestGamePointerLock();
+    }
+
+    function pauseGame() {
+        STATE.isRunning = false;
+        pauseMenu?.classList.remove('hidden');
+        if (document.pointerLockElement) document.exitPointerLock();
+    }
+
+    function endGame() {
+        STATE.isRunning = false;
+        const vignetteEl = document.getElementById('panic-vignette');
+        if (vignetteEl) vignetteEl.style.opacity = '0';
+        uiLayer?.classList.add('hidden');
+        crosshair?.classList.add('hidden');
+        gameOverMenu?.classList.remove('hidden');
+        if (document.pointerLockElement) document.exitPointerLock();
+
+        const titleEl = document.getElementById('winner-title');
+        const descEl = document.getElementById('winner-desc');
+        const whistleBadge = document.getElementById('gameover-whistle-badge');
+        if (whistleBadge) {
+            whistleBadge.innerText = STATE.isWarrantMode
+                ? "🚨 LAGOS STATE POLICE STATION VERDICT"
+                : STATE.isOvertime ? "⚡ SUDDEN DEATH OVERTIME FINISH" : "FULL TIME WHISTLE";
+        }
+
+        const playerWon =
+            (STATE.role === 'police' && STATE.scorePolice > STATE.scoreThief) ||
+            (STATE.role === 'thief' && STATE.scoreThief > STATE.scorePolice);
+        const isDraw = STATE.scorePolice === STATE.scoreThief;
+
+        const diffBonus = STATE.difficulty === 'hard' ? 20 : STATE.difficulty === 'normal' ? 10 : 0;
+        const comboBonus = Math.round((STATE.maxMatchCombo - 1) * 12);
+        let rpDelta = 0;
+        let payoutMsg = "";
+
+        if (STATE.isWarrantMode) {
+            if (STATE.role === 'thief') {
+                if (playerWon) {
+                    STATE.winStreak++;
+                    rpDelta = 75 + comboBonus;
+                    earnLagosNaira(2500, 'warrant_escape_bonus');
+                    if (titleEl) titleEl.innerText = "🚐 RECORD CLEARED! YOU JAPA'D!";
+                    if (descEl) descEl.innerText = `Against 2 MopOl units, you unlocked the Danfo and escaped Panti custody for "${STATE.warrantCrime}"! Saved ${formatNaira(STATE.warrantBail)} bail + won ₦2,500!`;
+                    sendPoliceVerdictToLagosLife('ESCAPED', { finePaid: 0, bonusEarned: 2500 });
+                } else {
+                    STATE.winStreak = 0;
+                    rpDelta = -35;
+                    const bailDeducted = Math.min(STATE.walletBalance, STATE.warrantBail);
+                    STATE.walletBalance -= bailDeducted;
+                    syncWalletWithLagosLifeSim(-bailDeducted, 'police_station_bail_fine');
+                    if (titleEl) titleEl.innerText = "🚓 ARRESTED! DETAINED AT PANTI!";
+                    const arrestReason = isDraw ? "90s Warrant Timer expired & Black Maria surrounded the compound!" : "MopOl Officers tackled you!";
+                    if (descEl) descEl.innerText = `${arrestReason} Booked for "${STATE.warrantCrime}" — Bail Fine deducted: -${formatNaira(bailDeducted)}.`;
+                    sendPoliceVerdictToLagosLife('ARRESTED', { finePaid: bailDeducted });
+                }
+            } else {
+                if (playerWon) {
+                    STATE.winStreak++;
+                    rpDelta = 55 + comboBonus;
+                    earnLagosNaira(3500, 'police_warrant_bounty');
+                    if (titleEl) titleEl.innerText = "🚓 SUSPECT BOOKED INTO CELL!";
+                    if (descEl) descEl.innerText = `Area Command commended your arrest! Police Bounty paid: +₦3,500.`;
+                    sendPoliceVerdictToLagosLife('WARRANT_EXECUTED', { bountyEarned: 3500 });
+                } else {
+                    STATE.winStreak = 0;
+                    rpDelta = -20;
+                    if (titleEl) titleEl.innerText = "🏃🏾‍♂️ SUSPECT ESCAPED IN DANFO!";
+                    if (descEl) descEl.innerText = `The reported suspect slipped through Oshodi traffic! Warrant remains open.`;
+                    sendPoliceVerdictToLagosLife('SUSPECT_ESCAPED', { bountyEarned: 0 });
+                }
+            }
+        } else {
+            if (playerWon) {
+                STATE.winStreak++;
+                rpDelta = 35 + diffBonus + comboBonus + Math.min(25, STATE.winStreak * 5);
+                const streakBonusCash = STATE.winStreak >= 2 ? STATE.winStreak * 250 : 0;
+                const totalPayout = STATE.selectedPayout + streakBonusCash;
+                earnLagosNaira(totalPayout, 'match_win_payout');
+                payoutMsg = ` | Won +${formatNaira(totalPayout)}!`;
+            } else if (isDraw) {
+                rpDelta = 5 + comboBonus;
+                if (STATE.selectedStake > 0) {
+                    earnLagosNaira(STATE.selectedStake, 'match_draw_refund');
+                    payoutMsg = ` | Stake Refunded (${formatNaira(STATE.selectedStake)})`;
+                }
+            } else {
+                STATE.winStreak = 0;
+                rpDelta = -Math.max(10, 25 - comboBonus);
+            }
+
+            if (titleEl) {
+                if (STATE.scorePolice > STATE.scoreThief) {
+                    titleEl.innerText = "🚓 POLICE WINS!";
+                } else if (STATE.scoreThief > STATE.scorePolice) {
+                    titleEl.innerText = "🏃🏾‍♂️ THIEF WINS!";
+                } else {
+                    titleEl.innerText = "🤝 COMPOUND DRAW!";
+                }
+            }
+            if (descEl) {
+                descEl.innerText = `Score — Police: ${STATE.scorePolice} | Thief: ${STATE.scoreThief}${payoutMsg}`;
+            }
+        }
+
+        STATE.streetCredRP = Math.max(100, STATE.streetCredRP + rpDelta);
+        try {
+            localStorage.setItem(CRED_STORAGE_KEY, String(STATE.streetCredRP));
+            localStorage.setItem(STREAK_STORAGE_KEY, String(STATE.winStreak));
+        } catch (e) {}
+
+        const rpEl = document.getElementById('gameover-rp-delta');
+        const comboEl = document.getElementById('gameover-max-combo');
+        const tierEl = document.getElementById('gameover-rank-tier');
+        if (rpEl) {
+            rpEl.innerText = `${rpDelta >= 0 ? '+' : ''}${rpDelta} RP`;
+            rpEl.className = `text-xs sm:text-sm font-extrabold font-mono-tech ${rpDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+        }
+        if (comboEl) comboEl.innerText = `${STATE.maxMatchCombo.toFixed(1)}x 🔥`;
+        if (tierEl) tierEl.innerText = getRankForRP(STATE.streetCredRP).name;
+
+        STATE.hasBalogunSneakers = false;
+        STATE.hasWaterCooler = false;
+        const sb = document.getElementById('shop-sneakers-badge');
+        const cb = document.getElementById('shop-cooler-badge');
+        if (sb) sb.innerText = '₦1,500';
+        if (cb) cb.innerText = '₦1,200';
+
+        updateWalletUI();
+        updateCompetitiveUI();
+    }
+
+    window.addEventListener('keydown', (e) => {
+        const k = e.key.toLowerCase();
+        if (k === 'w' || e.key === 'ArrowUp') keys.w = true;
+        if (k === 'a' || e.key === 'ArrowLeft') keys.a = true;
+        if (k === 's' || e.key === 'ArrowDown') keys.s = true;
+        if (k === 'd' || e.key === 'ArrowRight') keys.d = true;
+        if (e.key === 'Shift') keys.shift = true;
+        if (e.code === 'Space') {
+            keys.space = true;
+            jumpBufferTimer = 0.16;
+        }
+        if (k === 'e') triggerPlayerDash();
+        if (k === 'q') triggerPlayerSmoke();
+        if (k === 'f') triggerPlayerWaterThrow();
+        if (k === 'g') tossGalaSnack();
+        if (k === '1') buyInGameZobo();
+        if (k === '2') buyInGameDecoy();
+        if (k === 'p' || e.key === 'Escape') {
+            if (STATE.isRunning) pauseGame();
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        const k = e.key.toLowerCase();
+        if (k === 'w' || e.key === 'ArrowUp') keys.w = false;
+        if (k === 'a' || e.key === 'ArrowLeft') keys.a = false;
+        if (k === 's' || e.key === 'ArrowDown') keys.s = false;
+        if (k === 'd' || e.key === 'ArrowRight') keys.d = false;
+        if (e.key === 'Shift') keys.shift = false;
+        if (e.code === 'Space') keys.space = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!STATE.isRunning) return;
+        const dx = Math.max(-95, Math.min(95, e.movementX || 0));
+        const dy = Math.max(-95, Math.min(95, e.movementY || 0));
+        targetCameraYaw -= dx * STATE.mouseSensitivity;
+        targetCameraPitch = Math.max(0.14, Math.min(1.02, targetCameraPitch + dy * STATE.mouseSensitivity * 0.85));
+    });
+
+    container.addEventListener('mousedown', (e) => {
+        if (!STATE.isRunning) return;
+        if (document.pointerLockElement !== renderer?.domElement) {
+            requestGamePointerLock();
+        } else if (e.button === 0) {
+            triggerPlayerDash();
+        } else if (e.button === 2) {
+            triggerPlayerSmoke();
+        }
+    });
+
+    window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Touch Look & Mobile Buttons
+    let lastTouchX = null, lastTouchY = null;
+    container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            lastTouchX = e.touches[0].clientX;
+            lastTouchY = e.touches[0].clientY;
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (!STATE.isRunning || e.touches.length !== 1 || lastTouchX === null) return;
+        const dx = e.touches[0].clientX - lastTouchX;
+        const dy = e.touches[0].clientY - lastTouchY;
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+        targetCameraYaw -= dx * 0.005;
+        targetCameraPitch = Math.max(0.14, Math.min(1.02, targetCameraPitch + dy * 0.004));
+    }, { passive: true });
+
+    document.getElementById('btn-touch-jump')?.addEventListener('click', () => { jumpBufferTimer = 0.18; });
+    document.getElementById('btn-touch-sprint')?.addEventListener('click', () => triggerPlayerDash());
+    document.getElementById('btn-touch-throw')?.addEventListener('click', () => triggerPlayerWaterThrow());
+    document.getElementById('btn-touch-smoke')?.addEventListener('click', () => triggerPlayerSmoke());
+
+    // Menu, Shop & HUD Button Listeners
+    document.getElementById('btn-police')?.addEventListener('click', () => {
+        STATE.isMultiplayerRoom = false;
+        startGame('police', false);
+    });
+    document.getElementById('btn-thief')?.addEventListener('click', () => {
+        STATE.isMultiplayerRoom = false;
+        startGame('thief', false);
+    });
+    document.getElementById('btn-buy-zobo')?.addEventListener('click', () => buyInGameZobo());
+    document.getElementById('btn-buy-decoy')?.addEventListener('click', () => buyInGameDecoy());
+    document.getElementById('btn-toss-gala')?.addEventListener('click', () => tossGalaSnack());
+    document.getElementById('btn-weather')?.addEventListener('click', () => setRainstormActive(!STATE.isRainstorm));
+
+    // Live WebSocket Room Code Modal Listeners
+    document.getElementById('btn-open-multiplayer')?.addEventListener('click', () => {
+        document.getElementById('multiplayer-modal')?.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-multiplayer')?.addEventListener('click', () => {
+        document.getElementById('multiplayer-modal')?.classList.add('hidden');
+    });
+    document.getElementById('btn-mp-create')?.addEventListener('click', () => {
+        const prefixes = ['EKO', 'LAS', 'DAN', 'OSH', 'LEK', 'YAB'];
+        const randCode = prefixes[Math.floor(Math.random() * prefixes.length)] + Math.floor(1 + Math.random() * 9);
+        const inp = document.getElementById('mp-room-input');
+        if (inp) inp.value = randCode;
+        mpManager.connectRoom(randCode, true);
+    });
+    document.getElementById('btn-mp-join')?.addEventListener('click', () => {
+        const inp = document.getElementById('mp-room-input');
+        const code = inp && inp.value.trim() ? inp.value.trim().toUpperCase() : 'EKO1';
+        mpManager.connectRoom(code, false);
+    });
+    document.getElementById('btn-mp-start-match')?.addEventListener('click', () => {
+        if (!STATE.peerConnected) return;
+        STATE.isMultiplayerRoom = true;
+        mpManager.sendPacket({ type: 'START_MP_MATCH' });
+        document.getElementById('multiplayer-modal')?.classList.add('hidden');
+        const myRole = STATE.isRoomHost ? 'police' : 'thief';
+        startGame(myRole, false);
+    });
+
+    // Police Station Dispatch / Wanted Warrant Listeners
+    document.getElementById('btn-sim-police-report')?.addEventListener('click', () => {
+        const pick = NAIJA_CRIMES[Math.floor(Math.random() * NAIJA_CRIMES.length)];
+        openPoliceWarrantModal(pick.crime, pick.bail, pick.stars);
+    });
+    document.getElementById('btn-close-warrant')?.addEventListener('click', () => {
+        document.getElementById('police-warrant-modal')?.classList.add('hidden');
+    });
+    document.getElementById('btn-warrant-japa')?.addEventListener('click', () => {
+        startGame('thief', true);
+    });
+    document.getElementById('btn-warrant-bounty-cop')?.addEventListener('click', () => {
+        startGame('police', true);
+    });
+    document.getElementById('btn-warrant-settle')?.addEventListener('click', () => {
+        const fbEl = document.getElementById('warrant-feedback');
+        if (!spendLagosNaira(STATE.warrantBribeCost, 'checkpoint_officer_settlement')) {
+            if (fbEl) {
+                fbEl.innerText = `⚠️ Insufficient Naira to settle Officer! Need ${formatNaira(STATE.warrantBribeCost)} — Oya run!`;
+                fbEl.classList.remove('hidden');
+            }
+            return;
+        }
+        if (Math.random() < 0.65) {
+            sfx.playPowerup();
+            sendPoliceVerdictToLagosLife('SETTLED', { bribePaid: STATE.warrantBribeCost });
+            document.getElementById('police-warrant-modal')?.classList.add('hidden');
+            if (menuShopFeedback) {
+                menuShopFeedback.innerText = `🤝 Officer collected ${formatNaira(STATE.warrantBribeCost)} ("For pure water") and tore your Police Report!`;
+                menuShopFeedback.classList.remove('hidden');
+            }
+        } else {
+            sfx.playSiren();
+            STATE.warrantBail = Math.round(STATE.warrantBail * 1.5);
+            STATE.warrantStars = Math.min(5, STATE.warrantStars + 1);
+            if (fbEl) {
+                fbEl.innerText = `🚨 CHAI! DPO caught you trying to bribe an officer! Bail increased to ${formatNaira(STATE.warrantBail)} — Launching Chase!`;
+                fbEl.classList.remove('hidden');
+            }
+            setTimeout(() => startGame('thief', true), 1400);
+        }
+    });
+
+    document.getElementById('btn-open-leaderboard')?.addEventListener('click', () => {
+        renderLeaderboardModal();
+        document.getElementById('leaderboard-modal')?.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-leaderboard')?.addEventListener('click', () => {
+        document.getElementById('leaderboard-modal')?.classList.add('hidden');
+    });
+
+    document.getElementById('btn-open-howto')?.addEventListener('click', () => {
+        document.getElementById('howto-modal')?.classList.remove('hidden');
+    });
+    document.getElementById('btn-open-howto-pause')?.addEventListener('click', () => {
+        document.getElementById('howto-modal')?.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-howto')?.addEventListener('click', () => {
+        document.getElementById('howto-modal')?.classList.add('hidden');
+    });
+    document.getElementById('btn-close-howto-bottom')?.addEventListener('click', () => {
+        document.getElementById('howto-modal')?.classList.add('hidden');
+    });
+
+    document.getElementById('btn-sim-topup')?.addEventListener('click', () => {
+        sfx.init();
+        sfx.playPowerup();
+        earnLagosNaira(5000, 'lagos_life_sim_topup');
+        if (menuShopFeedback) {
+            menuShopFeedback.innerText = '✅ +₦5,000 transferred from Lagos Life Sim Wallet!';
+            menuShopFeedback.classList.remove('hidden');
+        }
+    });
+
+    // Stake Selection
+    document.querySelectorAll('.stake-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            STATE.selectedStake = Number(btn.getAttribute('data-stake') || 0);
+            STATE.selectedPayout = Number(btn.getAttribute('data-payout') || 500);
+            const payoutLbl = document.getElementById('stake-payout-label');
+            if (payoutLbl) payoutLbl.innerText = `Win Payout: ${formatNaira(STATE.selectedPayout)}`;
+            document.querySelectorAll('.stake-btn').forEach(b => {
+                b.className = "stake-btn py-1.5 px-2 rounded-lg text-[11px] font-semibold bg-slate-900 text-slate-300 border border-white/10 hover:border-white/30 transition";
+            });
+            btn.className = "stake-btn py-1.5 px-2 rounded-lg text-[11px] font-bold bg-yellow-400 text-slate-950 shadow border border-yellow-300 transition";
+        });
+    });
+
+    // Balogun Shop Upgrades
+    document.getElementById('shop-sneakers')?.addEventListener('click', () => {
+        sfx.init();
+        if (STATE.hasBalogunSneakers) return;
+        if (spendLagosNaira(1500, 'buy_balogun_sneakers')) {
+            sfx.playPowerup();
+            STATE.hasBalogunSneakers = true;
+            const badge = document.getElementById('shop-sneakers-badge');
+            if (badge) badge.innerText = 'EQUIPPED ✅';
+            if (menuShopFeedback) {
+                menuShopFeedback.innerText = '👟 Balogun Sneakers equipped for your next match (+18% Speed & Jump)!';
+                menuShopFeedback.classList.remove('hidden');
+            }
+        }
+    });
+
+    document.getElementById('shop-cooler')?.addEventListener('click', () => {
+        sfx.init();
+        if (STATE.hasWaterCooler) return;
+        if (spendLagosNaira(1200, 'buy_pure_water_cooler')) {
+            sfx.playPowerup();
+            STATE.hasWaterCooler = true;
+            const badge = document.getElementById('shop-cooler-badge');
+            if (badge) badge.innerText = 'EQUIPPED ✅';
+            if (menuShopFeedback) {
+                menuShopFeedback.innerText = '💧 Pure Water Cooler equipped (2x faster throws & wider splash)!';
+                menuShopFeedback.classList.remove('hidden');
+            }
+        }
+    });
+
+    // Difficulty Selection
+    document.querySelectorAll('.diff-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            STATE.difficulty = btn.getAttribute('data-diff') || 'normal';
+            document.querySelectorAll('.diff-btn').forEach(b => {
+                b.className = "diff-btn px-2.5 py-1 rounded-md text-[10px] font-semibold text-slate-300 hover:text-white transition";
+            });
+            btn.className = "diff-btn px-2.5 py-1 rounded-md text-[10px] font-bold bg-yellow-400 text-slate-950 shadow transition";
+        });
+    });
+
+    document.querySelectorAll('.drip-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            sfx.init();
+            sfx.playPowerup();
+            STATE.playerDrip = btn.getAttribute('data-drip') || 'classic';
+            applyCharacterColors();
+            document.querySelectorAll('.drip-btn').forEach(b => {
+                b.className = "drip-btn px-2 py-0.5 rounded text-[10px] font-semibold text-slate-300 hover:text-white transition";
+            });
+            btn.className = "drip-btn px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-400 text-slate-950 transition";
+        });
+    });
+
+    // Pause, Audio, Sensitivity & Game Over Controls
+    document.getElementById('btn-pause-hud')?.addEventListener('click', () => pauseGame());
+    document.getElementById('btn-resume')?.addEventListener('click', () => {
+        STATE.isRunning = true;
+        pauseMenu?.classList.add('hidden');
+        requestGamePointerLock();
+    });
+    document.getElementById('btn-switch-role')?.addEventListener('click', () => {
+        const nextRole = STATE.role === 'police' ? 'thief' : 'police';
+        startGame(nextRole, STATE.isWarrantMode);
+    });
+    document.getElementById('btn-restart-pause')?.addEventListener('click', () => {
+        pauseMenu?.classList.add('hidden');
+        uiLayer?.classList.add('hidden');
+        crosshair?.classList.add('hidden');
+        startMenu?.classList.remove('hidden');
+    });
+    document.getElementById('btn-restart')?.addEventListener('click', () => {
+        gameOverMenu?.classList.add('hidden');
+        startMenu?.classList.remove('hidden');
+    });
+    document.getElementById('btn-cashout-sim')?.addEventListener('click', () => {
+        syncWalletWithLagosLifeSim(0, 'player_cashout_to_sim');
+        gameOverMenu?.classList.add('hidden');
+        startMenu?.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-audio')?.addEventListener('click', () => {
+        sfx.enabled = !sfx.enabled;
+        const icon = document.getElementById('audio-icon');
+        if (icon) icon.innerText = sfx.enabled ? '🔊' : '🔇';
+    });
+
+    document.getElementById('btn-autocam')?.addEventListener('click', (e) => {
+        STATE.autoCam = !STATE.autoCam;
+        e.currentTarget.innerText = `🎥 Auto-Cam: ${STATE.autoCam ? 'ON' : 'OFF'}`;
+    });
+
+    document.getElementById('sens-slider')?.addEventListener('input', (e) => {
+        const val = Number(e.target.value);
+        STATE.mouseSensitivity = (val / 40) * 0.0010;
+        const lbl = document.getElementById('sens-value');
+        if (lbl) lbl.innerText = `${val}%`;
+    });
+
+    setInterval(() => {
+        if (!STATE.isRunning) return;
+        if (!STATE.isOvertime) {
+            STATE.timeLeft--;
+            const mins = Math.floor(Math.max(0, STATE.timeLeft) / 60);
+            const secs = Math.max(0, STATE.timeLeft) % 60;
+            if (timerDisplay) {
+                timerDisplay.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+            if (STATE.timeLeft <= 0) {
+                if (!STATE.isWarrantMode && STATE.scorePolice === STATE.scoreThief) {
+                    STATE.isOvertime = true;
+                    sfx.playSiren();
+                    if (roundBadge) roundBadge.innerText = "⚡ OVERTIME";
+                    if (timerDisplay) timerDisplay.innerText = "SUDDEN DEATH";
+                    pushKillfeed("⚡ SUDDEN DEATH OVERTIME! NEXT POINT WINS!", 'combo');
+                    showMessage("SUDDEN DEATH OVERTIME!", true, "⚡ Next Capture or Danfo Escape wins the match!", STATE.role);
+                } else {
+                    endGame();
+                }
+            }
+        }
+    }, 1000);
+
+    let lastTime = performance.now();
+
+    function animate(now = performance.now()) {
+        if (!isWebGLAvailable) return;
+        requestAnimationFrame(animate);
+
+        const dt = Math.min((now - lastTime) / 1000, 0.1);
+        lastTime = now;
+
+        if (STATE.isRunning) {
+            // Cooldowns & Timers
+            if (STATE.dashCooldown > 0) STATE.dashCooldown = Math.max(0, STATE.dashCooldown - dt);
+            if (STATE.dashActiveTimer > 0) STATE.dashActiveTimer = Math.max(0, STATE.dashActiveTimer - dt);
+            if (STATE.smokeCooldown > 0) STATE.smokeCooldown = Math.max(0, STATE.smokeCooldown - dt);
+            if (STATE.throwCooldown > 0) STATE.throwCooldown = Math.max(0, STATE.throwCooldown - dt);
+            if (STATE.speedBoostTimer > 0) STATE.speedBoostTimer = Math.max(0, STATE.speedBoostTimer - dt);
+            if (STATE.playerSlowTimer > 0) STATE.playerSlowTimer = Math.max(0, STATE.playerSlowTimer - dt);
+            if (STATE.aiSlowTimer > 0) STATE.aiSlowTimer = Math.max(0, STATE.aiSlowTimer - dt);
+            if (STATE.aiDashCooldown > 0) STATE.aiDashCooldown = Math.max(0, STATE.aiDashCooldown - dt);
+            if (STATE.aiThrowCooldown > 0) STATE.aiThrowCooldown = Math.max(0, STATE.aiThrowCooldown - dt);
+            if (STATE.backupDashCooldown > 0) STATE.backupDashCooldown = Math.max(0, STATE.backupDashCooldown - dt);
+            if (STATE.backupThrowCooldown > 0) STATE.backupThrowCooldown = Math.max(0, STATE.backupThrowCooldown - dt);
+            if (STATE.backupSlowTimer > 0) STATE.backupSlowTimer = Math.max(0, STATE.backupSlowTimer - dt);
+            if (STATE.headStartTimer > 0) STATE.headStartTimer = Math.max(0, STATE.headStartTimer - dt);
+            if (STATE.tackleBreakCooldown > 0) STATE.tackleBreakCooldown = Math.max(0, STATE.tackleBreakCooldown - dt);
+            if (STATE.sanctuaryNoticeCooldown > 0) STATE.sanctuaryNoticeCooldown = Math.max(0, STATE.sanctuaryNoticeCooldown - dt);
+
+            if (STATE.comboTimer > 0) {
+                STATE.comboTimer -= dt;
+                if (STATE.comboTimer <= 0 && STATE.comboMultiplier > 1.0) {
+                    STATE.comboMultiplier = 1.0;
+                    updateCompetitiveUI();
+                }
+            }
+
+            // Relocate Japa Bus Zone (Pause relocation if Thief is actively boarding inside the Green Sanctuary!)
+            if (!isThiefInGreenSanctuary()) {
+                STATE.japaTimer -= dt;
+            }
+            if (STATE.japaTimer <= 0) {
+                STATE.japaTimer = STATE.isWarrantMode ? 18 : 24;
+                STATE.boardingProgress = 0;
+                currentJapaSpotIndex = (currentJapaSpotIndex + 1) % japaSpots.length;
+                japaZoneGroup.position.copy(japaSpots[currentJapaSpotIndex]);
+                pushKillfeed("🚐 Agbero moved the Japa Danfo to a new bus stop!", 'info');
+            }
+
+            // 1. Update Camera Angles Smoothly First
+            cameraYaw += (targetCameraYaw - cameraYaw) * Math.min(1, dt * 22);
+            cameraPitch += (targetCameraPitch - cameraPitch) * Math.min(1, dt * 22);
+
+            // 2. Player Movement Relative to Camera (Fast & Agile Thief Tuning)
+            const moveForward = (keys.w ? 1 : 0) - (keys.s ? 1 : 0);
+            const moveRight = (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
+            const isMoving = moveForward !== 0 || moveRight !== 0;
+
+            let baseSpeed = STATE.role === 'thief' ? 15.6 : 14.6;
+            if (STATE.hasBalogunSneakers) baseSpeed *= 1.18;
+            const sprintDrain = STATE.role === 'thief' ? 17 : 20;
+            const staminaRegen = STATE.role === 'thief' ? 22 : 17;
+            if (keys.shift && isMoving && STATE.stamina > 2) {
+                baseSpeed *= 1.44;
+                STATE.stamina = Math.max(0, STATE.stamina - sprintDrain * dt);
+            } else {
+                STATE.stamina = Math.min(100, STATE.stamina + staminaRegen * dt);
+            }
+            if (STATE.speedBoostTimer > 0) baseSpeed *= 1.35;
+            if (STATE.playerSlowTimer > 0) baseSpeed *= 0.78;
+
+            // Adrenaline Surge when Police are close to the Thief
+            if (STATE.role === 'thief') {
+                const nearCopDist = Math.min(
+                    playerChar.root.position.distanceTo(aiChar.root.position),
+                    playerChar.root.position.distanceTo(backupCopChar.root.position)
+                );
+                if (nearCopDist < 9.0) {
+                    baseSpeed *= 1.14;
+                }
+            }
+
+            if (STATE.dashActiveTimer <= 0) {
+                if (isMoving) {
+                    const camForward = new THREE.Vector3(-Math.sin(cameraYaw), 0, -Math.cos(cameraYaw));
+                    const camRight = new THREE.Vector3(Math.cos(cameraYaw), 0, -Math.sin(cameraYaw));
+                    const wishDir = new THREE.Vector3()
+                        .addScaledVector(camForward, moveForward)
+                        .addScaledVector(camRight, moveRight)
+                        .normalize();
+
+                    playerVel.x = wishDir.x * baseSpeed;
+                    playerVel.z = wishDir.z * baseSpeed;
+
+                    const targetRot = Math.atan2(wishDir.x, wishDir.z);
+                    let diff = targetRot - playerChar.root.rotation.y;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    playerChar.root.rotation.y += diff * Math.min(1, dt * 14);
+
+                    if (STATE.autoCam && Math.abs(moveRight) > 0 && moveForward >= 0) {
+                        targetCameraYaw -= moveRight * 0.45 * dt;
+                    }
+                } else {
+                    const friction = STATE.isRainstorm ? 0.015 : 0.001;
+                    playerVel.x *= Math.pow(friction, dt);
+                    playerVel.z *= Math.pow(friction, dt);
+                }
+            } else if (STATE.isRainstorm) {
+                playerVel.x *= 1 + 0.22 * dt;
+                playerVel.z *= 1 + 0.22 * dt;
+            }
+
+            // Animate 3D Lagos Rainstorm Particles around Player
+            if (STATE.isRainstorm && rainSystem.visible) {
+                rainSystem.position.set(playerChar.root.position.x, 0, playerChar.root.position.z);
+                const posArr = rainGeo.attributes.position.array;
+                for (let i = 0; i < rainCount; i++) {
+                    posArr[i * 6 + 1] -= 34 * dt;
+                    posArr[i * 6 + 4] -= 34 * dt;
+                    if (posArr[i * 6 + 1] < 0) {
+                        const ny = 34 + Math.random() * 6;
+                        posArr[i * 6 + 1] = ny;
+                        posArr[i * 6 + 4] = ny - 1.6;
+                    }
+                }
+                rainGeo.attributes.position.needsUpdate = true;
+            }
+
+            // Jump & Gravity
+            if (playerGrounded) coyoteTimer = 0.12;
+            else coyoteTimer = Math.max(0, coyoteTimer - dt);
+            if (jumpBufferTimer > 0) jumpBufferTimer = Math.max(0, jumpBufferTimer - dt);
+
+            if (jumpBufferTimer > 0 && coyoteTimer > 0) {
+                sfx.playJump();
+                playerVel.y = STATE.hasBalogunSneakers ? 15.2 : 13.6;
+                playerGrounded = false;
+                coyoteTimer = 0;
+                jumpBufferTimer = 0;
+            }
+            playerVel.y -= 32 * dt;
+
+            // Apply Player Position & Solid Box Collisions + Auto-Vault
+            const pPos = playerChar.root.position;
+            pPos.x += playerVel.x * dt;
+            pPos.z += playerVel.z * dt;
+            pPos.y += playerVel.y * dt;
+
+            let supportY = 0;
+            const pRadius = 0.65;
+            for (const c of colliders) {
+                if (pPos.x + pRadius > c.minX && pPos.x - pRadius < c.maxX &&
+                    pPos.z + pRadius > c.minZ && pPos.z - pRadius < c.maxZ) {
+                    if (pPos.y >= c.maxY - 0.55 && playerVel.y <= 0) {
+                        supportY = Math.max(supportY, c.maxY);
+                    } else if (pPos.y < c.maxY && pPos.y + 1.55 >= c.maxY && playerVel.y > -4) {
+                        // Parkour Ledge Auto-Vault
+                        pPos.y = c.maxY;
+                        playerVel.y = 0;
+                        supportY = Math.max(supportY, c.maxY);
+                        sfx.playVault();
+                    } else if (pPos.y < c.maxY - 0.3) {
+                        const overlapLeft = (pPos.x + pRadius) - c.minX;
+                        const overlapRight = c.maxX - (pPos.x - pRadius);
+                        const overlapFront = (pPos.z + pRadius) - c.minZ;
+                        const overlapBack = c.maxZ - (pPos.z - pRadius);
+                        const minOverlap = Math.min(overlapLeft, overlapRight, overlapFront, overlapBack);
+                        if (minOverlap === overlapLeft) pPos.x = c.minX - pRadius;
+                        else if (minOverlap === overlapRight) pPos.x = c.maxX + pRadius;
+                        else if (minOverlap === overlapFront) pPos.z = c.minZ - pRadius;
+                        else pPos.z = c.maxZ + pRadius;
+                    }
+                }
+            }
+
+            if (pPos.y <= supportY) {
+                pPos.y = supportY;
+                playerVel.y = 0;
+                playerGrounded = true;
+            } else {
+                playerGrounded = false;
+            }
+
+            pPos.x = Math.max(-BOUNDARY + 2, Math.min(BOUNDARY - 2, pPos.x));
+            pPos.z = Math.max(-BOUNDARY + 2, Math.min(BOUNDARY - 2, pPos.z));
+
+            if (pPos.y > 10.2 && playerGrounded) {
+                advanceStreetBounty('highroof');
+            }
+
+            bouncePads.forEach(bp => {
+                if (bp.cooldown > 0) bp.cooldown = Math.max(0, bp.cooldown - dt);
+                const distXZ = Math.hypot(pPos.x - bp.pos.x, pPos.z - bp.pos.z);
+                if (distXZ < 1.55 && pPos.y < 2.2 && bp.cooldown <= 0) {
+                    bp.cooldown = 0.85;
+                    sfx.playVault();
+                    playerVel.y = 23.5;
+                    playerGrounded = false;
+                    advanceStreetBounty('tyre');
+                    pushKillfeed('🛞 [PARKOUR] Vulcanizer Tyre Super-Bounce!', 'info');
+                }
+            });
+
+            movingTraffic.forEach(tk => {
+                if (tk.hornCooldown > 0) tk.hornCooldown = Math.max(0, tk.hornCooldown - dt);
+                tk.coord += tk.dirSign * tk.speed * dt;
+                if (tk.coord > 86) tk.coord = -86;
+                if (tk.coord < -86) tk.coord = 86;
+
+                if (tk.axis === 'z') {
+                    tk.group.position.set(tk.laneOffset, 0, tk.coord);
+                    tk.group.rotation.y = tk.dirSign > 0 ? 0 : Math.PI;
+                } else {
+                    tk.group.position.set(tk.coord, 0, tk.laneOffset);
+                    tk.group.rotation.y = tk.dirSign > 0 ? Math.PI / 2 : -Math.PI / 2;
+                }
+
+                // Check if Keke bumps Player or AI on the road
+                const pDist = Math.hypot(pPos.x - tk.group.position.x, pPos.z - tk.group.position.z);
+                if (pDist < 2.25 && pPos.y < 1.8 && tk.hornCooldown <= 0) {
+                    tk.hornCooldown = 2.0;
+                    sfx.playDash();
+                    playerVel.y = 9.5;
+                    const pushDir = new THREE.Vector3(pPos.x - tk.group.position.x, 0, pPos.z - tk.group.position.z).normalize();
+                    pPos.addScaledVector(pushDir, 2.8);
+                    pushKillfeed('🛺 Keke Driver: "Wetin happen! Comot for road o!"', 'bad');
+                }
+
+                const aPosRef = aiChar.root.position;
+                const aiDist = Math.hypot(aPosRef.x - tk.group.position.x, aPosRef.z - tk.group.position.z);
+                if (aiDist < 2.35 && aPosRef.y < 1.8) {
+                    STATE.aiSlowTimer = Math.max(STATE.aiSlowTimer, 2.5);
+                    const pushDir = new THREE.Vector3(aPosRef.x - tk.group.position.x, 0, aPosRef.z - tk.group.position.z).normalize();
+                    aPosRef.addScaledVector(pushDir, 3.0);
+                }
+            });
+
+            // 🐕 Local Compound Guard Dog ("Bingo / Ekuke") Patrol, Distraction & Chase Logic
+            if (STATE.bingoSnackTimer > 0) STATE.bingoSnackTimer = Math.max(0, STATE.bingoSnackTimer - dt);
+            if (STATE.bingoBiteCooldown > 0) STATE.bingoBiteCooldown = Math.max(0, STATE.bingoBiteCooldown - dt);
+            if (bingoDog.barkCooldown > 0) bingoDog.barkCooldown = Math.max(0, bingoDog.barkCooldown - dt);
+
+            const dogPos = bingoDog.root.position;
+            let dogTarget = null;
+            let dogSpeed = 6.2;
+
+            if (STATE.bingoSnackTimer > 0 && galaSnackMesh.visible) {
+                bingoDog.alertRing.material.color.setHex(0x22c55e);
+                if (dogPos.distanceTo(galaSnackMesh.position) > 1.2) {
+                    dogTarget = galaSnackMesh.position;
+                    dogSpeed = 14.5;
+                } else if (dogPos.distanceTo(aiChar.root.position) < 15 && aiChar.root.position.y < 2.2) {
+                    // Once fed Gala by Player, Bingo guards Player and chases the Opponent!
+                    dogTarget = aiChar.root.position;
+                    dogSpeed = 15.8;
+                }
+            } else {
+                galaSnackMesh.visible = false;
+                const distToP = dogPos.distanceTo(pPos);
+                const distToAI = dogPos.distanceTo(aiChar.root.position);
+                if (distToP < 12.0 && pPos.y < 2.2 && !isThiefInGreenSanctuary()) {
+                    dogTarget = pPos;
+                    dogSpeed = 15.2;
+                    bingoDog.alertRing.material.color.setHex(0xef4444);
+                    if (bingoDog.barkCooldown <= 0) {
+                        bingoDog.barkCooldown = 2.6;
+                        sfx.playBark();
+                        pushKillfeed('🐕 BINGO: "WOOF! WOOF!" (Toss Gala [G] to distract!)', 'bad');
+                    }
+                } else if (distToAI < 11.5 && aiChar.root.position.y < 2.2) {
+                    dogTarget = aiChar.root.position;
+                    dogSpeed = 14.8;
+                    bingoDog.alertRing.material.color.setHex(0xfacc15);
+                } else {
+                    bingoDog.alertRing.material.color.setHex(0xf97316);
+                    const patrolX = bingoDog.homePos.x + Math.sin(now * 0.0012) * 6.5;
+                    const patrolZ = bingoDog.homePos.z + Math.cos(now * 0.0012) * 6.5;
+                    dogTarget = new THREE.Vector3(patrolX, 0, patrolZ);
+                }
+            }
+
+            if (dogTarget) {
+                const dVec = new THREE.Vector3(dogTarget.x - dogPos.x, 0, dogTarget.z - dogPos.z);
+                if (dVec.lengthSq() > 0.08) {
+                    dVec.normalize();
+                    dogPos.x += dVec.x * dogSpeed * dt;
+                    dogPos.z += dVec.z * dogSpeed * dt;
+                    bingoDog.root.rotation.y = Math.atan2(dVec.x, dVec.z);
+                }
+            }
+            const legSwing = Math.sin(now * 0.024) * 0.65;
+            bingoDog.legs[0].rotation.x = legSwing;
+            bingoDog.legs[1].rotation.x = -legSwing;
+            bingoDog.legs[2].rotation.x = -legSwing;
+            bingoDog.legs[3].rotation.x = legSwing;
+            bingoDog.tail.rotation.z = Math.sin(now * 0.03) * 0.45;
+
+            if (STATE.bingoSnackTimer <= 0 && STATE.bingoBiteCooldown <= 0 && dogPos.distanceTo(pPos) < 1.65 && pPos.y < 1.8) {
+                STATE.bingoBiteCooldown = 4.0;
+                STATE.playerSlowTimer = 2.0;
+                sfx.playBark();
+                pushKillfeed('🐕 Bingo nipped your ankle! Slowed for 2s (Press [G] to toss Gala!)', 'bad');
+                showMessage('🐕 CHAI! BINGO BIT YOUR ANKLE!', false, '🌭 Press [G] to toss Gala (₦150) so Bingo chases your rival!', STATE.role);
+            }
+            if (dogPos.distanceTo(aiChar.root.position) < 1.75 && aiChar.root.position.y < 1.8 && STATE.aiSlowTimer <= 0) {
+                STATE.aiSlowTimer = 3.2;
+                sfx.playBark();
+                pushKillfeed('🐕 Bingo chased & slowed your opponent!', 'good');
+            }
+
+            function stepPursuerPhysics(charObj, pos, velY, moveDir, speed) {
+                pos.x += moveDir.x * speed * dt;
+                pos.z += moveDir.z * speed * dt;
+                velY -= 32 * dt;
+                pos.y += velY * dt;
+
+                let aiSupportY = 0;
+                const r = 0.65;
+                for (const c of colliders) {
+                    if (pos.x + r > c.minX && pos.x - r < c.maxX &&
+                        pos.z + r > c.minZ && pos.z - r < c.maxZ) {
+                        if (pos.y >= c.maxY - 0.6 && velY <= 0) {
+                            aiSupportY = Math.max(aiSupportY, c.maxY);
+                        } else if (c.maxY <= 3.8 && pos.y < c.maxY) {
+                            // Police Parkour Vault: Cops climb market stalls & Danfos to chase Thief on roofs!
+                            velY = 12.8;
+                            pos.y += 0.35;
+                        } else {
+                            // Slide tangentially around tall buildings
+                            pos.x -= moveDir.x * speed * dt * 1.1;
+                            pos.z += moveDir.x * speed * dt * 0.95;
+                            pos.x -= moveDir.z * speed * dt * 0.95;
+                        }
+                    }
+                }
+
+                // GREEN DANFO SANCTUARY SHIELD: Police cannot enter the unlocked Green Ring!
+                if (STATE.role === 'thief' && isDanfoUnlockedForThief()) {
+                    const jPos = japaZoneGroup.position;
+                    const dx = pos.x - jPos.x;
+                    const dz = pos.z - jPos.z;
+                    const distToZone = Math.hypot(dx, dz);
+                    const minCopRadius = 4.65;
+                    if (distToZone < minCopRadius) {
+                        const nx = distToZone > 0.01 ? dx / distToZone : 1;
+                        const nz = distToZone > 0.01 ? dz / distToZone : 0;
+                        pos.x = jPos.x + nx * minCopRadius;
+                        pos.z = jPos.z + nz * minCopRadius;
+                    }
+                }
+
+                if (pos.y <= aiSupportY) {
+                    pos.y = aiSupportY;
+                    velY = 0;
+                }
+                pos.x = Math.max(-BOUNDARY + 2, Math.min(BOUNDARY - 2, pos.x));
+                pos.z = Math.max(-BOUNDARY + 2, Math.min(BOUNDARY - 2, pos.z));
+                charObj.root.rotation.y = Math.atan2(moveDir.x, moveDir.z);
+                return velY;
+            }
+
+            // 3A. Primary AI Opponent Logic (or Live WebSocket Player 2 Sync!)
+            const aPos = aiChar.root.position;
+            let aiSpeed = STATE.difficulty === 'hard' ? 13.4 : STATE.difficulty === 'normal' ? 12.2 : 10.8;
+            if (STATE.role === 'thief' && STATE.isWarrantMode) {
+                aiSpeed += Math.min(0.8, 0.2 * STATE.warrantStars);
+            }
+            if (STATE.headStartTimer > 0 && STATE.role === 'thief') {
+                aiSpeed *= 0.35;
+            }
+            if (STATE.aiSlowTimer > 0) aiSpeed *= 0.50;
+
+            let aiDistToPlayer = aPos.distanceTo(pPos);
+
+            if (STATE.isMultiplayerRoom) {
+                // Live WebSocket / Room Code Sync: Interpolate Remote Player Position & Send Local State at 30Hz
+                aPos.lerp(mpManager.remoteTargetPos, Math.min(1, dt * 18));
+                aiChar.root.rotation.y = mpManager.remoteTargetRotY;
+                aiDistToPlayer = aPos.distanceTo(pPos);
+
+                if (now - mpManager.lastSendTime > 33) {
+                    mpManager.lastSendTime = now;
+                    mpManager.sendPacket({
+                        type: 'PLAYER_SYNC',
+                        x: pPos.x,
+                        y: pPos.y,
+                        z: pPos.z,
+                        rotY: playerChar.root.rotation.y
+                    });
+                }
+            } else {
+                const aiGoal = new THREE.Vector3();
+                if (STATE.role === 'police') {
+                    const distToPlayer = aPos.distanceTo(pPos);
+                    let nextKeyPos = null;
+                    let bestKeyDist = Infinity;
+                    missionTargets.forEach(t => {
+                        if (!t.collected) {
+                            const d = aPos.distanceTo(t.mesh.position);
+                            if (d < bestKeyDist) {
+                                bestKeyDist = d;
+                                nextKeyPos = t.mesh.position;
+                            }
+                        }
+                    });
+
+                    if (distToPlayer < 13 && nextKeyPos) {
+                        aiGoal.copy(aPos).sub(pPos).normalize().multiplyScalar(14).add(nextKeyPos);
+                    } else if (nextKeyPos) {
+                        aiGoal.copy(nextKeyPos);
+                    } else if (distToPlayer < 14) {
+                        aiGoal.copy(aPos).sub(pPos).normalize().multiplyScalar(18).add(japaZoneGroup.position);
+                    } else {
+                        aiGoal.copy(japaZoneGroup.position);
+                    }
+                } else {
+                    // Lead Officer pursuit with fair lead
+                    aiGoal.copy(pPos).addScaledVector(playerVel, 0.22);
+                }
+
+                const aiDir = new THREE.Vector3(aiGoal.x - aPos.x, 0, aiGoal.z - aPos.z);
+                if (aiDir.lengthSq() > 0.01) {
+                    aiDir.normalize();
+                    if (STATE.aiDashCooldown <= 0 && STATE.headStartTimer <= 0 && aPos.distanceTo(pPos) < 14) {
+                        STATE.aiDashCooldown = STATE.difficulty === 'hard' ? 6.0 : 7.5;
+                        aiSpeed *= 1.35;
+                        if (STATE.role === 'thief') pushKillfeed("🚓 Officer lunged — Press [E] or [Shift] to dodge!", 'bad');
+                    }
+                    aiVelY = stepPursuerPhysics(aiChar, aPos, aiVelY, aiDir, aiSpeed);
+                }
+
+                // Primary AI Throws Pure Water Sachet with realistic scatter & longer cooldown
+                aiDistToPlayer = aPos.distanceTo(pPos);
+                if (STATE.aiThrowCooldown <= 0 && STATE.headStartTimer <= 0 && !isThiefInGreenSanctuary() && aiDistToPlayer < 22 && aiDistToPlayer > 6) {
+                    STATE.aiThrowCooldown = STATE.difficulty === 'hard' ? 5.8 : 7.2;
+                    const leadPos = pPos.clone().addScaledVector(playerVel, 0.2);
+                    const scatter = (Math.random() - 0.5) * 0.38;
+                    const aimYaw = Math.atan2(-(leadPos.x - aPos.x), -(leadPos.z - aPos.z)) + scatter;
+                    throwPureWater(aPos, aimYaw, 0.22, false);
+                }
+            }
+
+            // 3B. Backup MopOl Officer (Patrols & Flanks at Fair Speed in Single-Player/Warrant)
+            const bPos = backupCopChar.root.position;
+            let backupDistToPlayer = 999;
+            if (STATE.role === 'thief' && !STATE.isMultiplayerRoom) {
+                backupCopChar.root.visible = true;
+                let backupSpeed = aiSpeed * 0.86;
+                if (STATE.backupSlowTimer > 0) backupSpeed *= 0.50;
+
+                const interceptTarget = isDanfoUnlockedForThief()
+                    ? japaZoneGroup.position.clone().lerp(pPos, 0.55)
+                    : pPos.clone().add(new THREE.Vector3(playerVel.z * 0.55, 0, -playerVel.x * 0.55));
+
+                const bDir = new THREE.Vector3(interceptTarget.x - bPos.x, 0, interceptTarget.z - bPos.z);
+                if (bDir.lengthSq() > 0.01) {
+                    bDir.normalize();
+                    backupVelY = stepPursuerPhysics(backupCopChar, bPos, backupVelY, bDir, backupSpeed);
+                }
+
+                backupDistToPlayer = bPos.distanceTo(pPos);
+                if (STATE.backupThrowCooldown <= 0 && STATE.headStartTimer <= 0 && !isThiefInGreenSanctuary() && backupDistToPlayer < 20 && backupDistToPlayer > 7) {
+                    STATE.backupThrowCooldown = 7.8;
+                    const scatter = (Math.random() - 0.5) * 0.42;
+                    const aimYaw = Math.atan2(-(pPos.x - bPos.x), -(pPos.z - bPos.z)) + scatter;
+                    throwPureWater(bPos, aimYaw, 0.22, false);
+                }
+
+                const bSwing = Math.sin(now * 0.015 + 1.2) * 0.85;
+                backupCopChar.leftLeg.rotation.x = bSwing;
+                backupCopChar.rightLeg.rotation.x = -bSwing;
+                backupCopChar.leftArm.rotation.x = -bSwing;
+                backupCopChar.rightArm.rotation.x = bSwing;
+            } else {
+                backupCopChar.root.visible = false;
+            }
+
+            // 3C. Thief Stress & Panic Siren Vignette + Heartbeat Audio
+            const closestCopDist = Math.min(aiDistToPlayer, backupDistToPlayer);
+            const vignetteEl = document.getElementById('panic-vignette');
+            if (STATE.role === 'thief') {
+                const panicAlpha = closestCopDist < 22
+                    ? Math.min(0.95, (22 - closestCopDist) / 16)
+                    : (STATE.isWarrantMode ? 0.22 : 0);
+                if (vignetteEl) vignetteEl.style.opacity = String(panicAlpha.toFixed(2));
+
+                if (closestCopDist < 18) {
+                    STATE.heartbeatTimer -= dt;
+                    if (STATE.heartbeatTimer <= 0) {
+                        const beatRate = Math.max(0.28, (closestCopDist / 18) * 0.75);
+                        STATE.heartbeatTimer = beatRate;
+                        sfx.playHeartbeat(1.8 - closestCopDist / 18);
+                    }
+                }
+            } else if (vignetteEl) {
+                vignetteEl.style.opacity = '0';
+            }
+
+            // 4. Character Limb Swing Animations
+            const pSpeed = Math.hypot(playerVel.x, playerVel.z);
+            const pSwing = pSpeed > 0.5 ? Math.sin(now * 0.016) * Math.min(1.0, pSpeed / 12) : 0;
+            playerChar.leftLeg.rotation.x = pSwing;
+            playerChar.rightLeg.rotation.x = -pSwing;
+            playerChar.leftArm.rotation.x = -pSwing;
+            playerChar.rightArm.rotation.x = pSwing;
+
+            const aiSwing = Math.sin(now * 0.015) * 0.85;
+            aiChar.leftLeg.rotation.x = aiSwing;
+            aiChar.rightLeg.rotation.x = -aiSwing;
+            aiChar.leftArm.rotation.x = -aiSwing;
+            aiChar.rightArm.rotation.x = aiSwing;
+
+            // 5. Capture, Green Zone Sanctuary Protection & Danfo Boarding Checks
+            const thiefSafeInGreenZone = isThiefInGreenSanctuary();
+            const hitByMainCop = !thiefSafeInGreenZone && Math.hypot(pPos.x - aPos.x, pPos.z - aPos.z) < 1.85 && Math.abs(pPos.y - aPos.y) < 1.6;
+            const hitByBackupCop = !thiefSafeInGreenZone && STATE.role === 'thief' && !STATE.isMultiplayerRoom && Math.hypot(pPos.x - bPos.x, pPos.z - bPos.z) < 1.85 && Math.abs(pPos.y - bPos.y) < 1.6;
+
+            if (STATE.headStartTimer <= 0 && (hitByMainCop || hitByBackupCop)) {
+                if (STATE.role === 'thief' && (STATE.dashActiveTimer > 0 || (STATE.stamina >= 38 && STATE.tackleBreakCooldown <= 0))) {
+                    // Thief slips out of the tackle using stamina/agility!
+                    sfx.playVault();
+                    STATE.tackleBreakCooldown = 8.0;
+                    STATE.stamina = Math.max(15, STATE.stamina - 35);
+                    STATE.speedBoostTimer = 2.6;
+                    STATE.playerSlowTimer = 0;
+
+                    const attackerPos = hitByMainCop ? aPos : bPos;
+                    const escapeDir = new THREE.Vector3(pPos.x - attackerPos.x, 0, pPos.z - attackerPos.z).normalize();
+                    if (escapeDir.lengthSq() < 0.01) escapeDir.set(0, 0, 1);
+                    pPos.addScaledVector(escapeDir, 3.8);
+                    attackerPos.addScaledVector(escapeDir, -3.5);
+                    if (hitByMainCop) STATE.aiSlowTimer = 2.4;
+                    else STATE.backupSlowTimer = 2.4;
+
+                    addComboGinger(0.5, "Slipped Police Tackle");
+                    pushKillfeed("⚡ [YOU] Slipped out of Police Tackle! (+2.5s Boost)", 'combo');
+                    showMessage("OMO! YOU SLIPPED THE TACKLE!", true, "⚡ Officer stumbled! 2.5s Adrenaline Burst!", 'thief');
+                } else {
+                    if (STATE.isMultiplayerRoom) {
+                        mpManager.sendPacket({ type: 'ROUND_EVENT', outcome: 'CAPTURE' });
+                    }
+                    handleCapture();
+                }
+            }
+
+            if (STATE.role === 'thief') {
+                const distToDanfo = pPos.distanceTo(japaZoneGroup.position);
+                if (distToDanfo < 4.0) {
+                    if (!isDanfoUnlockedForThief()) {
+                        if (Math.random() < 0.08) {
+                            showMessage("🔒 DANFO DOOR LOCKED!", false, `Grab all 3 Gold Rooftop Keys first (${STATE.targetsCollected}/3)!`, 'thief');
+                        }
+                    } else {
+                        // Safe inside Green Sanctuary Ring! Police are blocked outside while you board
+                        STATE.playerSlowTimer = 0;
+                        if (STATE.sanctuaryNoticeCooldown <= 0) {
+                            STATE.sanctuaryNoticeCooldown = 4.0;
+                            sfx.playVault();
+                            pushKillfeed("🛡️ [SAFE ZONE] Agbero blocked the Police at the Danfo door!", 'good');
+                            showMessage("🛡️ SAFE INSIDE DANFO GREEN ZONE!", true, "🚐 Police cannot touch you here! Hold to finish boarding!", 'thief');
+                        }
+                        STATE.boardingProgress += dt;
+                        if (STATE.boardingProgress >= 1.5) {
+                            STATE.boardingProgress = 0;
+                            if (STATE.isMultiplayerRoom) {
+                                mpManager.sendPacket({ type: 'ROUND_EVENT', outcome: 'JAPA' });
+                            }
+                            handleThiefJapa(true);
+                        }
+                    }
+                } else {
+                    STATE.boardingProgress = Math.max(0, STATE.boardingProgress - dt * 0.9);
+                }
+                updateDanfoLockVisuals();
+            } else {
+                if (isDanfoUnlockedForThief() && aPos.distanceTo(japaZoneGroup.position) < 3.5) {
+                    handleThiefJapa(false);
+                }
+            }
+
+            // 6. Pickups, Golden Loot, Bullseyes & Projectiles
+            powerups.forEach(p => {
+                if (p.cooldown > 0) {
+                    p.cooldown -= dt;
+                    if (p.cooldown <= 0) p.mesh.visible = true;
+                    return;
+                }
+                p.mesh.rotation.y += 2.2 * dt;
+                p.mesh.position.y = p.baseY + Math.sin(now * 0.004) * 0.18;
+                if (pPos.distanceTo(p.mesh.position) < 2.0) {
+                    sfx.playPowerup();
+                    p.cooldown = 14;
+                    p.mesh.visible = false;
+                    STATE.stamina = 100;
+                    STATE.speedBoostTimer = 5.0;
+                    advanceStreetBounty('zobo');
+                    showMessage("CHILLED ZOBO & GALA!", true, "⚡ 100% Stamina & 5s Speed Boost!", STATE.role);
+                }
+            });
+
+            missionTargets.forEach((t, idx) => {
+                if (t.collected) return;
+                t.mesh.rotation.y += 2.5 * dt;
+                t.mesh.position.y = t.baseY + Math.sin(now * 0.005) * 0.22;
+                if (pPos.distanceTo(t.mesh.position) < 2.2) {
+                    sfx.playPowerup();
+                    t.collected = true;
+                    t.mesh.visible = false;
+                    STATE.targetsCollected++;
+                    if (STATE.isMultiplayerRoom) {
+                        mpManager.sendPacket({ type: 'KEY_GRAB', index: idx });
+                    }
+                    addComboGinger(0.5, "Golden Clearance Key Secured");
+                    const cash = Math.round(250 * STATE.comboMultiplier);
+                    earnLagosNaira(cash, 'golden_loot_pickup');
+                    updateScoreboard();
+                    updateDanfoLockVisuals();
+                    if (STATE.role === 'thief' && STATE.targetsCollected >= STATE.totalTargetsNeeded) {
+                        sfx.playGoal();
+                        pushKillfeed("🔓 ALL 3 KEYS GRABBED! DANFO BUS UNLOCKED!", 'combo');
+                        showMessage("🔓 DANFO BUS UNLOCKED!", true, "🚐 Sprint to the Green Danfo Beacon & hold for 1.5s to Japa!", 'thief');
+                    } else {
+                        showMessage(`GOLD KEY (${STATE.targetsCollected}/${STATE.totalTargetsNeeded})!`, true, `🔑 +${formatNaira(cash)} — ${STATE.totalTargetsNeeded - STATE.targetsCollected} more to unlock Danfo!`, STATE.role);
+                    }
+                } else if (!STATE.isMultiplayerRoom && STATE.role === 'police' && aPos.distanceTo(t.mesh.position) < 2.6) {
+                    sfx.playSiren();
+                    t.collected = true;
+                    t.mesh.visible = false;
+                    STATE.aiTargetsCollected++;
+                    updateScoreboard();
+                    updateDanfoLockVisuals();
+                    pushKillfeed(`🔑 [AI THIEF] Grabbed Gold Key (${STATE.aiTargetsCollected}/3)!`, 'bad');
+                }
+            });
+
+            streetTargets.forEach(st => {
+                if (st.cooldown > 0) st.cooldown = Math.max(0, st.cooldown - dt);
+                st.group.rotation.y += 1.8 * dt;
+            });
+
+            // Pure Water Projectiles
+            const splashRadius = STATE.hasWaterCooler ? 3.2 : 2.3;
+            for (let i = waterProjectiles.length - 1; i >= 0; i--) {
+                const wp = waterProjectiles[i];
+                wp.life -= dt;
+                wp.vel.y -= 18 * dt;
+                wp.mesh.position.addScaledVector(wp.vel, dt);
+
+                let hit = false;
+                if (wp.isFromPlayer) {
+                    const hitMain = wp.mesh.position.distanceTo(aPos.clone().add(new THREE.Vector3(0, 1.8, 0))) < splashRadius;
+                    const hitBackup = STATE.role === 'thief' && wp.mesh.position.distanceTo(bPos.clone().add(new THREE.Vector3(0, 1.8, 0))) < splashRadius;
+                    if (hitMain || hitBackup) {
+                        sfx.playSplash();
+                        if (hitMain) STATE.aiSlowTimer = 4.0;
+                        if (hitBackup) STATE.backupSlowTimer = 4.0;
+                        addComboGinger(0.5, "Pure Water Splash");
+                        earnLagosNaira(100, 'pure_water_splash');
+                        advanceStreetBounty('splash');
+                        showMessage("CHAI! COLD PURE WATER SPLASH!", true, "💧 Pursuer slowed for 4s (+₦100)!", STATE.role);
+                        hit = true;
+                    }
+                    streetTargets.forEach(st => {
+                        if (!hit && st.cooldown <= 0 && wp.mesh.position.distanceTo(st.group.position) < 2.2) {
+                            sfx.playPowerup();
+                            st.cooldown = 8;
+                            STATE.stamina = 100;
+                            STATE.speedBoostTimer = 4.0;
+                            addComboGinger(0.5, "Bullseye Target");
+                            earnLagosNaira(150, 'bullseye_target');
+                            advanceStreetBounty('splash');
+                            showMessage("BULLSEYE TARGET SPLASH!", true, "🎯 +₦150 & 4s Turbo Speed!", STATE.role);
+                            hit = true;
+                        }
+                    });
+                } else {
+                    if (isThiefInGreenSanctuary() && wp.mesh.position.distanceTo(japaZoneGroup.position) < 4.5) {
+                        hit = true;
+                    } else if (!isThiefInGreenSanctuary() && wp.mesh.position.distanceTo(pPos.clone().add(new THREE.Vector3(0, 1.8, 0))) < 1.85) {
+                        sfx.playSplash();
+                        STATE.playerSlowTimer = 1.6;
+                        pushKillfeed("💧 [AI] Splashed you! Press [E] Dash to shake it off!", 'bad');
+                        showMessage("PURE WATER SPLASH!", false, "💧 Briefly slowed — Press [E] Dash to break free!", STATE.role);
+                        hit = true;
+                    }
+                }
+
+                if (hit || wp.life <= 0 || wp.mesh.position.y <= 0.1) {
+                    scene.remove(wp.mesh);
+                    waterProjectiles.splice(i, 1);
+                }
+            }
+
+            // Smoke Clouds
+            for (let i = smokeClouds.length - 1; i >= 0; i--) {
+                const sc = smokeClouds[i];
+                sc.life -= dt;
+                if (sc.ownerRole === STATE.role) {
+                    if (aPos.distanceTo(sc.group.position) < 5.0) {
+                        STATE.aiSlowTimer = Math.max(STATE.aiSlowTimer, 1.5);
+                    }
+                    if (STATE.role === 'thief' && bPos.distanceTo(sc.group.position) < 5.0) {
+                        STATE.backupSlowTimer = Math.max(STATE.backupSlowTimer, 1.5);
+                    }
+                }
+                if (sc.life <= 0) {
+                    scene.remove(sc.group);
+                    smokeClouds.splice(i, 1);
+                }
+            }
+
+            // Interactive Football Pitch
+            if (pPos.distanceTo(ballMesh.position) < 1.8) {
+                const kickDir = ballMesh.position.clone().sub(pPos).setY(0).normalize();
+                ballVel.copy(kickDir.multiplyScalar(22));
+            }
+            ballMesh.position.addScaledVector(ballVel, dt);
+            ballVel.multiplyScalar(Math.pow(0.18, dt));
+            if (ballMesh.position.z > 38 && ballMesh.position.z < 46 &&
+                (Math.abs(ballMesh.position.x - (-57)) < 2.2 || Math.abs(ballMesh.position.x - (-27)) < 2.2)) {
+                sfx.playGoal();
+                ballMesh.position.set(-42, 0.65, 42);
+                ballVel.set(0, 0, 0);
+                addComboGinger(1.0, "Jay-Jay Okocha Goal");
+                earnLagosNaira(500, 'okocha_football_goal');
+                STATE.speedBoostTimer = 5.0;
+                showMessage("JAY-JAY OKOCHA GOAL!", true, "⚽ +₦500 Bonus & 5s Turbo Boost!", STATE.role);
+            }
+
+            // Bystander Callouts
+            bystanders.forEach(b => {
+                if (b.cooldown > 0) b.cooldown -= dt;
+                if (pPos.distanceTo(b.char.root.position) < 8.5 && b.cooldown <= 0) {
+                    b.cooldown = 14;
+                    const line = b.phrases[Math.floor(Math.random() * b.phrases.length)];
+                    pushKillfeed(`🗣️ ${line}`, 'info');
+                }
+            });
+
+            // HUD Updates
+            if (staminaBar) staminaBar.style.width = `${Math.round(STATE.stamina)}%`;
+            if (staminaLabel) staminaLabel.innerText = `${Math.round(STATE.stamina)}%`;
+            if (dashStatus) dashStatus.innerText = STATE.dashCooldown > 0 ? `${STATE.dashCooldown.toFixed(1)}s` : 'READY';
+            if (throwStatus) throwStatus.innerText = STATE.throwCooldown > 0 ? `${STATE.throwCooldown.toFixed(1)}s` : 'READY';
+            if (smokeStatus) smokeStatus.innerText = STATE.smokeCooldown > 0 ? `${STATE.smokeCooldown.toFixed(1)}s` : 'READY';
+
+            updateCompassAndRadar();
+        }
+
+        // Camera Follow with Tight In-Frame Tether
+        const desiredFocus = new THREE.Vector3(
+            playerChar.root.position.x,
+            playerChar.root.position.y + 2.5,
+            playerChar.root.position.z
+        );
+        smoothedCameraFocus.lerp(desiredFocus, Math.min(1, dt * 16));
+
+        const camOffset = new THREE.Vector3(
+            Math.sin(cameraYaw) * Math.cos(cameraPitch) * cameraDistance,
+            Math.sin(cameraPitch) * cameraDistance,
+            Math.cos(cameraYaw) * Math.cos(cameraPitch) * cameraDistance
+        );
+        camera.position.copy(smoothedCameraFocus).add(camOffset);
+        camera.position.y = Math.max(1.2, camera.position.y);
+        camera.lookAt(smoothedCameraFocus);
+
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        if (!renderer) return;
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    window.onload = function () {
+        animate();
+    };
+</script>
+</body>
+</html>
