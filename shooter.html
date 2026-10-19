@@ -368,7 +368,8 @@ function fatal(msg) {
 // ==========================================================================
 let renderer;
 try {
-    renderer = new THREE.WebGLRenderer({ antialias: settings.quality === 'high', powerPreference: 'high-performance' });
+    // No context MSAA: High quality anti-aliases in the composer's render target instead
+    renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
 } catch (e) {
     fatal('⚠️ WebGL is required to play.<br><span style="font-size:14px;color:#94a3b8">Turn on hardware acceleration or try another browser.</span>');
     throw e;
@@ -861,7 +862,7 @@ const M = {
     okada: [0xb91c1c, 0x1d4ed8, 0x111827].map((c) => std({ color: c, roughness: 0.4, metalness: 0.4 })),
     chrome: std({ color: 0xc8ccd2, roughness: 0.25, metalness: 0.9 }),
     pothole: decal({ color: 0x232325, roughness: 1 }),
-    puddle: decal({ color: 0x24272b, roughness: 0.06, metalness: 0.35 }),
+    puddle: decal({ color: 0x2f3338, roughness: 0.06, metalness: 0.4 }),
     manhole: decal({ color: 0x4d4f52, roughness: 0.5, metalness: 0.6 }),
     litter: std({ color: 0xf1f5f9, roughness: 0.4 }),
     pool: new THREE.MeshBasicMaterial({ map: texPool, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0, polygonOffset: true, polygonOffsetFactor: -4 }),
@@ -1006,8 +1007,13 @@ const glowMats = []; // [material, base emissive] for signs and billboards that 
 nightHooks.push((n) => { for (const [m, base] of glowMats) m.emissiveIntensity = base + n * 0.8; });
 const poolGeos = []; // light pools under street lamps, merged into one additive mesh shown after dark
 function lightPool(x, z, r) {
-    const g = new THREE.PlaneGeometry(r * 2, r * 2);
-    g.rotateX(-Math.PI / 2); g.translate(x, 0.035, z);
+    const g = new THREE.PlaneGeometry(r * 2, r * 2, 1, 28);
+    g.rotateX(-Math.PI / 2); g.translate(x, 0, z);
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) { // sit on the surface below: road, kerb or raised sidewalk
+        const az = Math.abs(pos.getZ(i));
+        pos.setY(i, az >= 6.98 && az <= 7.12 ? 0.195 : az > 7.12 && az <= 10.52 ? 0.165 : 0.035);
+    }
     poolGeos.push(g);
 }
 
@@ -1688,6 +1694,19 @@ class PartBaker {
     }
 }
 const shade = (hex, k) => _bc.set(hex).multiplyScalar(k).getHex();
+
+// Glossy things (puddles, glass, chrome, car paint, badges) reflect a prefiltered copy of the sky.
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envScene = new THREE.Scene();
+envScene.add(new THREE.Mesh(sky.geometry, sky.material));
+const ENV_MATS = [[M.puddle, 1], [M.glass, 0.9], [M.chrome, 1], [M.metal, 0.5], [M.brt, 0.5], [M.danfo, 0.35], [M.navy, 0.5],
+    ...M.car.map((m) => [m, 0.6]), ...M.okada.map((m) => [m, 0.6]), [CHAR_MAT.shiny, 0.8], [CHAR_MAT.gun, 0.35]];
+let envTex = null;
+nightHooks.push(() => {
+    envTex?.dispose();
+    envTex = pmrem.fromScene(envScene, 0, 1, 1000).texture;
+    for (const [m, k] of ENV_MATS) { m.envMap = envTex; m.envMapIntensity = k; m.needsUpdate = true; }
+});
 const labelMat = new THREE.MeshStandardMaterial({ map: texPoliceLabel, roughness: 0.7 });
 
 // Guns (forward is -z). Orange furniture marks less-lethal weapons, like the real thing.
@@ -2015,12 +2034,36 @@ function makeLabel(text, color, bg, depthTest = false) {
     s.renderOrder = 10;
     return s;
 }
-function floatText(pos, text, color, size = 1, life = 1.4) {
-    const s = makeLabel(text, color, size < 1 ? null : 'rgba(0,0,0,.45)', false);
-    s.scale.multiplyScalar(size);
+function floatText(pos, text, color) {
+    const s = makeLabel(text, color, 'rgba(0,0,0,.45)', false);
     s.position.copy(pos);
     scene.add(s);
-    fx.push({ obj: s, t: 0, life, kind: 'float', dispose: true });
+    fx.push({ obj: s, t: 0, life: 1.4, kind: 'float', dispose: true });
+}
+// Damage numbers come from a small pool of sprites that redraw their own canvas, so every
+// distinct value doesn't leave a cached texture behind.
+const dmgPool = Array.from({ length: 20 }, () => {
+    const cv = document.createElement('canvas'); cv.width = 128; cv.height = 48;
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false, sizeAttenuation: false }));
+    sp.scale.set(0.07, 0.026, 1); sp.renderOrder = 12; sp.visible = false; sp.userData.cv = cv;
+    scene.add(sp);
+    return sp;
+});
+let dmgIdx = 0;
+function damageNumber(pos, value, head) {
+    const sp = dmgPool[dmgIdx++ % dmgPool.length];
+    for (let i = fx.length - 1; i >= 0; i--) if (fx[i].obj === sp) fx.splice(i, 1);
+    const g = sp.userData.cv.getContext('2d');
+    g.clearRect(0, 0, 128, 48);
+    g.font = "700 38px Rajdhani, 'Arial Narrow', Arial, sans-serif"; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = 5; g.strokeStyle = 'rgba(0,0,0,.75)'; g.strokeText(String(value), 64, 26);
+    g.fillStyle = head ? '#fde047' : '#ffffff'; g.fillText(String(value), 64, 26);
+    sp.material.map.needsUpdate = true;
+    sp.material.opacity = 1;
+    sp.position.copy(pos);
+    sp.visible = true;
+    fx.push({ obj: sp, t: 0, life: 0.7, kind: 'float' });
 }
 function updateFx(dt) {
     for (let i = fx.length - 1; i >= 0; i--) {
@@ -2170,6 +2213,29 @@ function setCrouch(c, want) {
     world.propagateModifiedBodyPositionsToColliders();
     return true;
 }
+// Would a capsule (standing or crouched) fit at feet position p, against everything c's movement collides with?
+const CAPSULE = { [CAP_HALF]: new RAPIER.Capsule(CAP_HALF, CAP_R - 0.02), [CAP_HALF_CROUCH]: new RAPIER.Capsule(CAP_HALF_CROUCH, CAP_R - 0.02) };
+const NO_ROT = { x: 0, y: 0, z: 0, w: 1 };
+function capsuleFits(c, p, half) {
+    return !world.intersectionWithShape({ x: p.x, y: p.y + half + CAP_R, z: p.z }, NO_ROT, CAPSULE[half], undefined, MOVE_FILTER[c.team], c.collider);
+}
+// The enemy base (plus a capsule radius of margin) is off limits to this team.
+const forbiddenFor = (team, p) => (team === POLICE ? p.x > BASE_LINE - CAP_R : p.x < -BASE_LINE + CAP_R);
+// Knocked off a perch: someone downed on a roof (container, danfo, car…) drops to lower ground beside it,
+// so enemies can still reach them to arrest and teammates to revive.
+function dropFromPerch(c) {
+    const floor = onBridge(c.pos) ? bridgeHeight(c.pos.z) : 0;
+    if (c.pos.y - floor < 1.0) return;
+    for (const r of [1.3, 1.9, 2.6, 3.4]) for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2, x = c.pos.x + Math.cos(a) * r, z = c.pos.z + Math.sin(a) * r;
+        const hit = world.castRay(new RAPIER.Ray({ x, y: c.pos.y + 0.3, z }, { x: 0, y: -1, z: 0 }), c.pos.y + 1.5, true, undefined, RAY_STATIC_ONLY);
+        if (!hit || hit.timeOfImpact < 1.0) continue; // still on the roof, or inside something taller
+        const p = new V3(x, c.pos.y + 0.32 - hit.timeOfImpact, z);
+        if (forbiddenFor(c.team, p) || !capsuleFits(c, p, CAP_HALF_CROUCH)) continue;
+        c.teleport(p);
+        return;
+    }
+}
 // Climb onto a ledge in front (containers, danfos, kiosks) when a jump gets the hands high enough.
 function tryMantle(c) {
     if (c.mantle || c.state !== 'active' || c.crouch || c.grounded) return false;
@@ -2187,7 +2253,10 @@ function tryMantle(c) {
     const top = startY - down.timeOfImpact, rise = top - c.pos.y;
     if (rise < 0.5 || rise > 1.5) return false;
     if (world.castRay(new RAPIER.Ray({ x: px, y: top + 0.05, z: pz }, { x: 0, y: 1, z: 0 }), 1.85, true, undefined, RAY_STATIC_ONLY)) return false;
-    c.mantle = { t: 0, dur: 0.24 + rise * 0.12, from: c.pos.clone(), to: new V3(px + dx * 0.15, top + 0.03, pz + dz * 0.15) };
+    const to = new V3(px + dx * 0.15, top + 0.03, pz + dz * 0.15);
+    // The landing capsule must be clear of walls, stacked boxes, other players and the enemy base
+    if (forbiddenFor(c.team, to) || !capsuleFits(c, to, CAP_HALF)) return false;
+    c.mantle = { t: 0, dur: 0.24 + rise * 0.12, from: c.pos.clone(), to };
     c.vy = 0; c.vel.set(0, 0, 0);
     if (c.isPlayer) SFX.blip(260, 0.12, 'triangle', 0.08, 520);
     return true;
@@ -2339,7 +2408,7 @@ function fireWeapon(c, origin, dir, muzzle, startT = 0) {
     SFX.shot(c.weapon, c.isPlayer ? 0 : camDist);
     if (c.isPlayer && hitResult) hud.hitmarker(hitResult);
     if (dealt) for (const [t, e] of dealt) {
-        floatText(new V3(t.pos.x + rand(-0.3, 0.3), t.pos.y + headLine(t) + 0.45, t.pos.z + rand(-0.3, 0.3)), String(Math.round(e.dmg)), e.head ? '#fde047' : '#ffffff', 0.55, 0.7);
+        damageNumber(new V3(t.pos.x + rand(-0.3, 0.3), t.pos.y + headLine(t) + 0.45, t.pos.z + rand(-0.3, 0.3)), Math.round(e.dmg), e.head);
     }
 }
 const baseSafe = (c) => inBase(c.pos, c.team) && gameTime - c.lastShotAt > 1.5;
@@ -2364,6 +2433,7 @@ function damage(t, attacker, W, dist, point) {
 function goDown(t, by) {
     t.state = 'downed'; t.hp = 0; t.downTimer = RULES.downTime;
     t.interact = null; t.interactT = 0; t.reloadT = 0; t.ads = false; t.mantle = null;
+    dropFromPerch(t);
     setCrouch(t, true); // kneeling hitbox
     by.stats.downs++;
     hud.feed(by, '💥', t);
@@ -2480,7 +2550,7 @@ class Bot {
     decide() {
         const c = this.c, P = this.P;
         const fx = -Math.sin(c.yaw), fz = -Math.cos(c.yaw);
-        const eye = c.eye(new V3());
+        const eye = c.eye(new V3()), eyeStand = new V3(c.pos.x, c.pos.y + EYE, c.pos.z);
         let best = null, bestScore = Infinity;
         for (const o of chars) {
             if (o.team === c.team || o.state !== 'active') continue;
@@ -2490,7 +2560,7 @@ class Bot {
             if (inBase(o.pos, o.team) && !(gameTime - o.lastShotAt < 1.5 && d < 35)) continue;
             const dot = ((o.pos.x - c.pos.x) * fx + (o.pos.z - c.pos.z) * fz) / Math.max(d, 0.01);
             const noticed = dot > 0.3 || d < 9 || (o === this.alertBy && gameTime - this.alertT < 3) || (gameTime - o.lastShotAt < 0.6 && d < 40);
-            if (!noticed || !hasLOS(eye, o.pos, lerp(1.3, 1.05, o.crouchT))) continue;
+            if (!noticed || !hasLOS(o === this.target ? eyeStand : eye, o.pos, lerp(1.3, 1.05, o.crouchT))) continue;
             const sc = d * (o === this.target ? 0.7 : 1);
             if (sc < bestScore) { bestScore = sc; best = o; }
         }
@@ -2501,6 +2571,7 @@ class Bot {
         }
         this.visible = !!best;
         if (best) {
+            this.crouchOk = hasLOS(new V3(c.pos.x, c.pos.y + EYE_CROUCH, c.pos.z), best.pos, lerp(1.3, 1.05, best.crouchT));
             this.lastKnown.copy(best.pos); this.lastKnownT = gameTime;
             if (player && c.team === player.team) best.spottedAt = gameTime;
             this.path.length = 0; this.goal = null;
@@ -2582,7 +2653,7 @@ class Bot {
             out.mx = fx * approach - fz * this.strafe * 0.8;
             out.mz = fz * approach + fx * this.strafe * 0.8;
             out.speed = 4.3;
-            out.crouch = this.strafe === 0 && dist > 8; // hold still and crouch to steady the aim
+            out.crouch = this.strafe === 0 && dist > 8 && this.crouchOk; // hold still and crouch to steady the aim, if the target stays in view
         } else if (this.path.length) {
             let wp = this.path[0];
             while (wp && flatDist(wp, c.pos) < 0.8) { this.path.shift(); wp = this.path[0]; }
@@ -2602,7 +2673,7 @@ class Bot {
         this.stuckT += dt;
         if (this.stuckT > 0.7) {
             const moved = flatDist(this.checkPos, c.pos);
-            if (out.speed > 0 && moved < 0.35) {
+            if ((out.mx || out.mz) && out.speed > 0 && moved < 0.35) {
                 out.jump = true;
                 this.path = []; this.goal = null;
                 const a = Math.random() * Math.PI * 2;
@@ -2763,8 +2834,13 @@ function setupTouch() {
 // ==========================================================================
 const vmScene = new THREE.Scene();
 const vmCam = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.01, 10);
-vmScene.add(new THREE.HemisphereLight(0xe8f0ff, 0x5a4636, 1.6));
+const vmHemi = new THREE.HemisphereLight(0xe8f0ff, 0x5a4636, 1.6); vmScene.add(vmHemi);
 const vmSun = new THREE.DirectionalLight(0xffe2bd, 2.2); vmSun.position.set(-1, 2, 1.5); vmScene.add(vmSun);
+nightHooks.push(() => { // light the first-person arms like the world around them
+    const T = TIMES[settings.time] || TIMES.day;
+    vmHemi.color.set(T.sky); vmHemi.groundColor.set(T.ground); vmHemi.intensity = T.hemiI * 1.3;
+    vmSun.color.set(T.sunCol); vmSun.intensity = T.sunI * 0.85;
+});
 const vmRoot = new THREE.Group(); vmScene.add(vmRoot);
 const vmFlash = new THREE.Sprite(flashMat.clone()); vmFlash.visible = false; vmScene.add(vmFlash);
 let vmWeapons = {};
@@ -3015,7 +3091,12 @@ function animateChar(c, dt) {
     } else if (c.reviveTag) c.reviveTag.visible = false;
     // Overhead name + health bar (not for yourself, not when far away)
     if (c.bar) {
-        const show = c.state === 'active' && camera.position.distanceTo(c.pos) < 75;
+        let show = c.state === 'active' && camera.position.distanceTo(c.pos) < 75;
+        if (show && player && c.team !== player.team) {
+            c.barCheckT = (c.barCheckT || 0) - dt;
+            if (c.barCheckT <= 0) { c.barCheckT = 0.15; c.barSeen = hasLOS(camera.position, c.pos, headLine(c) + 0.1); }
+            show = c.barSeen;
+        }
         c.bar.visible = show;
         if (show) {
             c.bar.position.set(c.pos.x, c.pos.y + lerp(1.98, 1.6, c.crouchT) + air * 0.1, c.pos.z);
@@ -3373,7 +3454,11 @@ function update(dt) {
 // High graphics: render through a composer for soft bloom on the sun, signs and night lights.
 let composer = null, vmPass = null;
 function setupComposer() {
-    if (settings.quality !== 'high') { composer?.dispose(); composer = null; return; }
+    if (settings.quality !== 'high') {
+        if (composer) { for (const pass of composer.passes) pass.dispose(); composer.dispose(); }
+        composer = null; vmPass = null;
+        return;
+    }
     if (composer) return;
     try {
         const pr = renderer.getPixelRatio();
@@ -3429,7 +3514,7 @@ if (IS_TOUCH) setupTouch();
 $('loading').classList.add('hidden');
 $('menu').classList.remove('hidden');
 gameState = 'menu';
-window.__oshodi = { camera, setCrouch, applyTime, chars: () => chars, state: () => gameState, score, settings, startMatch, world, planRoute, navGrid, update, render, renderer, input, look, keys, clock: () => matchClock };
+window.__oshodi = { camera, setCrouch, applyTime, fire: (c, o, d) => fireWeapon(c, o, d, o), chars: () => chars, state: () => gameState, score, settings, startMatch, world, planRoute, navGrid, update, render, renderer, input, look, keys, clock: () => matchClock };
 step();
 </script>
 </body>
