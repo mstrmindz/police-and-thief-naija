@@ -1188,7 +1188,7 @@ function building(cx, cz, ry, w, d, floors, R) {
     for (let k = 0; k < floors; k++) if (R() < 0.6) box(F, rand(-w / 2 + 0.8, w / 2 - 0.8), gH + k * uH + 0.6, d / 2 + 0.17, 0.78, 0.52, 0.32, M.acUnit, { solid: false });
     deco(F, signGeo(Math.min(w - 0.6, 7.2), 0.9, Math.floor(R() * SIGN_SHOPS)), M.sign, 0, gH - 0.42, d / 2 + 0.03);
     if (R() < 0.7) box(F, 0, 3.0, d / 2 + 0.85, w - 0.4, 0.06, 1.7, pick(M.tarps, R), { rx: 0.22, solid: false });
-    if (R() < 0.55) { const p = new V3(rand(-w / 3, w / 3), 0, d / 2 + 1.3).applyMatrix4(F); generator(p.x, p.z, ry + R(), R); }
+    if (R() < 0.55) { const p = new V3(rand(-w / 3, w / 3), 0, d / 2 + 0.6).applyMatrix4(F); generator(p.x, p.z, ry + (R() - 0.5) * 0.5, R); }
 }
 
 function palmTree(x, z, R) {
@@ -1337,7 +1337,7 @@ function buildBridge() {
     }
     // Under-bridge market
     const R = mulberry32(77);
-    for (const z of [-20.5, -13.5, 13.5, 20.5]) {
+    for (const z of [-13.5, 13.5]) { // tables further in would seal a strip between the pillars off from the street
         const F = frame(0, 0, z);
         box(F, 0, 0.45, 0, 2.4, 0.9, 1.0, M.wood, { uv: [1.2, 1.2] });
         goods(F, 0, 0.9, 0, 2.2, 0.8, R);
@@ -1366,7 +1366,7 @@ function buildQuadrant(sx, sz) {
         else kiosk(x, z, sz > 0 ? Math.PI : 0, R);
     });
     // Back street between the stalls and the buildings
-    danfo(sx * 20, sz * 36.5, Math.PI / 2);
+    danfo(sx * 20, sz * 35.4, Math.PI / 2);
     keke(sx * 31, sz * 35.5, Math.PI / 2 + 0.3);
     generator(sx * 38, sz * 33.5, R(), R);
     drums(sx * 47, sz * 36, 3, R);
@@ -1466,11 +1466,11 @@ function buildMap() {
         const pts = [9, 22, 35, 48, 60].map((ax) => [sx * ax, sz * 32.5]);
         powerLine(pts);
         transformer(sx * 35, sz * 32.5);
-        for (const [ax] of pts.map(([x]) => [Math.abs(x)])) if (RV() < 0.7) cable(new V3(sx * ax, 7.6, sz * 32.5), new V3(sx * (ax + rand(-3, 3)), 6.1, sz * 41.05), 0.35);
+        for (const [ax] of pts.map(([x]) => [Math.abs(x)])) if (RV() < 0.7) cable(new V3(sx * ax, 7.6, sz * 32.5), new V3(sx * Math.max(8.5, ax + rand(-3, 3)), 6.1, sz * 41.05), 0.35);
         tyreStack(sx * 24, sz * 39.3, 4, RV);
         tyreStack(sx * 15, sz * 39.4, 5, RV);
     }
-    for (const x of [-43, -9, 25, 59]) cable(new V3(x, 6.7, -10.1), new V3(x + 1.5, 6.7, 10.1), 0.7);
+    for (const x of [-43, -9, 25, 59]) cable(new V3(x, 6.7, -10.1), new V3(x, 6.7, 10.1), 0.7);
     roadDecals(RV);
     billboard(-30, -39.4, 0, BILLBOARDS[0]);
     billboard(30, 39.4, Math.PI, BILLBOARDS[1]);
@@ -1623,12 +1623,13 @@ const RAMP_FOOT = [new V3(0, 0, BRIDGE.END + 1.5), new V3(0, 0, -BRIDGE.END - 1.
 function planRoute(from, to) {
     const fb = onBridge(from), tb = onBridge(to);
     if (!fb && !tb) return gridPath(from, to);
-    if (fb && tb) return [to.clone()];
+    const lane = (z) => new V3(0, 0, z); // x=0 clears the danfo and car parked on the deck
+    if (fb && tb) return [lane(from.z), lane(to.z), to.clone()];
     const cost = (e) => from.distanceTo(e) + e.distanceTo(to);
     const e = cost(RAMP_FOOT[0]) < cost(RAMP_FOOT[1]) ? RAMP_FOOT[0] : RAMP_FOOT[1];
     const onRamp = new V3(0, 0, Math.sign(e.z) * (BRIDGE.END - 3));
-    if (tb) return [...gridPath(from, e), onRamp, to.clone()];
-    return [onRamp, e.clone(), ...gridPath(e, to)];
+    if (tb) return [...gridPath(from, e), onRamp, lane(to.z), to.clone()];
+    return [lane(from.z), onRamp, e.clone(), ...gridPath(e, to)];
 }
 
 // ==========================================================================
@@ -1701,11 +1702,11 @@ const envScene = new THREE.Scene();
 envScene.add(new THREE.Mesh(sky.geometry, sky.material));
 const ENV_MATS = [[M.puddle, 1], [M.glass, 0.9], [M.chrome, 1], [M.metal, 0.5], [M.brt, 0.5], [M.danfo, 0.35], [M.navy, 0.5],
     ...M.car.map((m) => [m, 0.6]), ...M.okada.map((m) => [m, 0.6]), [CHAR_MAT.shiny, 0.8], [CHAR_MAT.gun, 0.35]];
-let envTex = null;
+let envRT = null;
 nightHooks.push(() => {
-    envTex?.dispose();
-    envTex = pmrem.fromScene(envScene, 0, 1, 1000).texture;
-    for (const [m, k] of ENV_MATS) { m.envMap = envTex; m.envMapIntensity = k; m.needsUpdate = true; }
+    envRT?.dispose();
+    envRT = pmrem.fromScene(envScene, 0, 1, 1000);
+    for (const [m, k] of ENV_MATS) { m.envMap = envRT.texture; m.envMapIntensity = k; m.needsUpdate = true; }
 });
 const labelMat = new THREE.MeshStandardMaterial({ map: texPoliceLabel, roughness: 0.7 });
 
@@ -2846,6 +2847,7 @@ const vmFlash = new THREE.Sprite(flashMat.clone()); vmFlash.visible = false; vmS
 let vmWeapons = {};
 const VM_HIP = new V3(0.17, -0.2, -0.58), VM_ADS = new V3(0, -0.122, -0.45);
 function buildViewmodel(colors) {
+    vmRoot.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
     vmRoot.clear();
     vmWeapons = {};
     const handMat = colors.police ? 'leather' : 'skin';
@@ -3062,10 +3064,12 @@ function animateChar(c, dt) {
     const pitch = c.pitch * (1 - d);
     const breathe = Math.sin(gameTime * 2.1 + c.seed) * 0.012;
     const lean = a.sprint * 0.2 + cr * 0.22 + air * 0.1 - a.flinch * 0.2;
-    m.spine.rotation.set(-pitch * 0.4 + lean + breathe, -m.hips.rotation.y, 0);
+    // The spine takes only a little of the aim pitch (less when crouched) so the head stays inside the hitbox
+    const spinePitch = clamp(-pitch * 0.4, -0.3, 0.3) * (1 - 0.7 * cr);
+    m.spine.rotation.set(spinePitch + lean + breathe, -m.hips.rotation.y, 0);
     m.head.rotation.x = -pitch * 0.3 - lean * 0.6;
-    // Arms aim with the camera pitch; sprinting carries the gun low, reloading dips it
-    let armX = -pitch * 0.6 - (cr * 0.22 + air * 0.1) + a.sprint * 0.55;
+    // Arms carry the rest of the aim pitch; sprinting carries the gun low, reloading dips it
+    let armX = -pitch - spinePitch - (cr * 0.22 + air * 0.1) + a.sprint * 0.55;
     let armZ = 0;
     if (c.reloadT > 0) { const k = Math.sin((1 - c.reloadT / WEAPONS[c.weapon].reload) * Math.PI); armX += k * 0.45; armZ = k * 0.25; }
     m.arms.rotation.set(armX, 0, armZ);
@@ -3358,7 +3362,7 @@ function setupMenu() {
     for (const [id, key] of Object.entries(segs)) {
         $(id).addEventListener('click', (e) => {
             const v = e.target.dataset.v;
-            if (!v) return;
+            if (!v || settings[key] === v) return;
             settings[key] = v; saveSettings(); paint();
             if (key === 'quality') { applyQuality(); setupComposer(); }
             if (key === 'time') applyTime();
